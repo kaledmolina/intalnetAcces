@@ -20,7 +20,7 @@ services:
     volumes:
       - storage_data:/var/www/html/storage
       - db_data:/var/www/html/database
-      - app_public:/var/www/html/public
+      - public_data:/var/www/html/public
     networks:
       - intalnet_net
 
@@ -31,7 +31,7 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - storage_data:/var/www/html/storage
-      - app_public:/var/www/html/public:ro
+      - public_data:/var/www/html/public:ro
       - certbot_etc:/etc/letsencrypt
     depends_on:
       - app
@@ -45,7 +45,7 @@ services:
     restart: always
     volumes:
       - certbot_etc:/etc/letsencrypt
-      - app_public:/var/www/html/public
+      - public_data:/var/www/html/public
     entrypoint: "/bin/sh -c 'trap exit TERM; while true; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - intalnet_net
@@ -53,7 +53,7 @@ services:
 volumes:
   storage_data:
   db_data:
-  app_public:
+  public_data:
   certbot_etc:
   certbot_www:
 
