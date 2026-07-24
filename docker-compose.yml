@@ -12,6 +12,8 @@ services:
       APP_ENV: "production"
       APP_DEBUG: "false"
       APP_URL: "https://access.intalnet.com"
+      ASSET_URL: "https://access.intalnet.com"
+      APP_KEY: "base64:GF2NlcgKEMXPsfb5cz+KXP5ru2SS52Zh0+7lQ8QNHBA="
       DB_CONNECTION: "sqlite"
       DB_DATABASE: "/var/www/html/database/database.sqlite"
     volumes:
@@ -25,9 +27,6 @@ services:
     image: nginx:alpine
     container_name: intalnetacces_web
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - storage_data:/var/www/html/storage
@@ -37,13 +36,28 @@ services:
       - app
     networks:
       - intalnet_net
+      - red-global
+
+  certbot:
+    image: certbot/certbot
+    container_name: intalnetacces_certbot
+    restart: always
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - app_public:/var/www/html/public
+    entrypoint: "/bin/sh -c 'trap exit TERM; while true; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - intalnet_net
 
 volumes:
   storage_data:
   db_data:
   app_public:
   certbot_etc:
+  certbot_www:
 
 networks:
   intalnet_net:
     driver: bridge
+  red-global:
+    external: true
