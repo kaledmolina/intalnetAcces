@@ -45,7 +45,10 @@
         <!-- Logo and Header -->
         <div class="text-center space-y-3">
             <div class="relative inline-block">
-                <img src="{{ asset('build/assets/image/logo.png') }}" class="h-16 mx-auto grayscale-logo object-contain" alt="IntalnetAcces Logo">
+                <img src="{{ asset('images/logo.png') }}" class="h-16 mx-auto object-contain rounded-2xl shadow-sm border border-slate-200 p-1" alt="IntalnetAcces Logo" onerror="this.style.display='none'; document.getElementById('logoFallback').classList.remove('hidden');">
+                <div id="logoFallback" class="hidden w-14 h-14 bg-black rounded-2xl flex items-center justify-center text-white shadow-xl mx-auto mb-2 border border-slate-800">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
             </div>
             
             <div class="space-y-1">
