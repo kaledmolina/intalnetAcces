@@ -14,13 +14,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     @viteReactRefresh
     @vite(['resources/js/app.jsx'])
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.lucide && window.lucide.createIcons) {
-                window.lucide.createIcons();
-            }
-        });
-    </script>
     
     <style>
         body {
