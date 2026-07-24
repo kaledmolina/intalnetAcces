@@ -66,6 +66,33 @@ IntalnetAcces es un sistema integral corporativo de control de asistencia y acce
    php artisan serve
    ```
 
+## 🐳 Despliegue con Docker en VPS (`access.intalnet.com`)
+
+El proyecto incluye configuración lista de Docker con NGINX, PHP 8.3 FPM, compilación de assets Vite y soporte SSL.
+
+1. **Clonar repositorio en tu servidor VPS:**
+   ```bash
+   git clone https://github.com/kaledmolina/intalnetAcces.git
+   cd intalnetAcces
+   ```
+
+2. **Crear archivo de variables de entorno `.env`:**
+   ```bash
+   cp .env.docker.example .env
+   ```
+   *Asegúrate de generar una clave `APP_KEY` válida con `php artisan key:generate --show` y pegarla en `.env`.*
+
+3. **Desplegar contenedores con Docker Compose:**
+   ```bash
+   docker compose up -d --build
+   ```
+
+4. **Configurar SSL Gratuito con Certbot (Let's Encrypt):**
+   ```bash
+   sudo apt update && sudo apt install -y certbot python3-certbot-nginx
+   sudo certbot --nginx -d access.intalnet.com
+   ```
+
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia MIT.
