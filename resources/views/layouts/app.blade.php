@@ -38,8 +38,14 @@
     @viteReactRefresh
     @vite(['resources/js/app.jsx'])
     @livewireStyles
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest" onload="if (window.lucide) { lucide.createIcons(); }"></script>
+    <!-- Lucide Icons (Self-Hosted via Vite bundle) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && window.lucide.createIcons) {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
     <style>
         body { 
             font-family: 'Inter', sans-serif; 

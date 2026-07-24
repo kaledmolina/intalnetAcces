@@ -1,9 +1,24 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { createIcons, icons } from 'lucide';
 import AttendanceChart from './components/AttendanceChart';
 import DeviceStatusWidget from './components/DeviceStatusWidget';
 
+// Hacer que lucide y createIcons estén disponibles globalmente
+window.lucide = { createIcons, icons };
+
+const initIcons = () => {
+    try {
+        createIcons({ icons });
+    } catch (e) {
+        console.error('Error al inicializar Lucide icons:', e);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar íconos Lucide empaquetados
+    initIcons();
+
     // Mount AttendanceChart
     const chartContainer = document.getElementById('react-attendance-chart');
     if (chartContainer) {
@@ -30,3 +45,4 @@ document.addEventListener('DOMContentLoaded', () => {
         createRoot(deviceContainer).render(<DeviceStatusWidget initialDevices={parsedDevices} />);
     }
 });
+
