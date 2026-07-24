@@ -13,6 +13,7 @@ services:
       APP_DEBUG: "false"
       APP_URL: "https://access.intalnet.com"
       ASSET_URL: "https://access.intalnet.com"
+      LIVEWIRE_ASSET_URL: "https://access.intalnet.com"
       APP_KEY: "base64:GF2NlcgKEMXPsfb5cz+KXP5ru2SS52Zh0+7lQ8QNHBA="
       DB_CONNECTION: "sqlite"
       DB_DATABASE: "/var/www/html/database/database.sqlite"

@@ -279,4 +279,12 @@ return [
         'max_calls' => 50,           // Maximum method calls per request
         'max_components' => 200,     // Maximum components per batch request
     ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Livewire Asset URL & Update URI for HTTPS / Reverse Proxy
+    |---------------------------------------------------------------------------
+    */
+    'asset_url' => env('LIVEWIRE_ASSET_URL', null),
+    'update_uri' => env('LIVEWIRE_UPDATE_URI', null),
 ];
