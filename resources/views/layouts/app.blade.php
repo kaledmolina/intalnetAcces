@@ -531,6 +531,10 @@
                 initFlowbite();
             }
 
+            if (window.updateClock) {
+                window.updateClock();
+            }
+
             if (window.lucide) {
                 lucide.createIcons();
             }
@@ -575,16 +579,16 @@
             });
 
             // Live Clock
-            function updateClock() {
+            window.updateClock = function() {
                 const now = new Date();
                 const clockEl = document.getElementById('liveClock');
                 if (clockEl) {
                     clockEl.textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 }
-            }
-            updateClock();
+            };
+            window.updateClock();
             if (window.clockInterval) clearInterval(window.clockInterval);
-            window.clockInterval = setInterval(updateClock, 1000);
+            window.clockInterval = setInterval(window.updateClock, 1000);
 
             // Mobile menu toggle
             const menuBtn = document.getElementById('mobileMenuBtn');
