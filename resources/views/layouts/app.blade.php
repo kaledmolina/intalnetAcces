@@ -389,8 +389,8 @@
 
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
-            <!-- Flowbite Monochrome Header -->
-            <header class="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0">
+            <!-- Flowbite Monochrome Header (Sticky Top) -->
+            <header class="h-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 sticky top-0 z-20 shadow-xs">
                 <div>
                     <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">@yield('page-header', 'Dashboard')</h1>
                     <p class="text-xs text-slate-500 font-medium">@yield('page-sub-header', 'Plataforma Corporativa en Blanco y Negro')</p>

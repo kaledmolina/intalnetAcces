@@ -23,13 +23,20 @@ const initIcons = () => {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar íconos Lucide empaquetados
+const mountReactComponents = () => {
     initIcons();
 
     // Mount AttendanceChart
     const chartContainer = document.getElementById('react-attendance-chart');
     if (chartContainer) {
+        if (chartContainer._reactRoot) {
+            try {
+                chartContainer._reactRoot.unmount();
+            } catch (e) {
+                console.error('Error unmounting chart root', e);
+            }
+            delete chartContainer._reactRoot;
+        }
         const rawData = chartContainer.getAttribute('data-chart') || '[]';
         let parsedData = [];
         try {
@@ -37,12 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error('Error parsing chart data', e);
         }
-        createRoot(chartContainer).render(<AttendanceChart chartData={parsedData.length ? parsedData : undefined} />);
+        const root = createRoot(chartContainer);
+        chartContainer._reactRoot = root;
+        root.render(<AttendanceChart chartData={parsedData.length ? parsedData : undefined} />);
     }
 
     // Mount DeviceStatusWidget
     const deviceContainer = document.getElementById('react-device-status');
     if (deviceContainer) {
+        if (deviceContainer._reactRoot) {
+            try {
+                deviceContainer._reactRoot.unmount();
+            } catch (e) {
+                console.error('Error unmounting device root', e);
+            }
+            delete deviceContainer._reactRoot;
+        }
         const rawDevices = deviceContainer.getAttribute('data-devices') || '[]';
         let parsedDevices = [];
         try {
@@ -50,7 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error('Error parsing devices data', e);
         }
-        createRoot(deviceContainer).render(<DeviceStatusWidget initialDevices={parsedDevices} />);
+        const root = createRoot(deviceContainer);
+        deviceContainer._reactRoot = root;
+        root.render(<DeviceStatusWidget initialDevices={parsedDevices} />);
     }
-});
+};
 
+// Event Listeners for DOMReady and Livewire / Single-Page Navigation
+document.addEventListener('DOMContentLoaded', mountReactComponents);
+document.addEventListener('livewire:navigated', mountReactComponents);
+document.addEventListener('livewire:load', mountReactComponents);
+window.addEventListener('popstate', mountReactComponents);
