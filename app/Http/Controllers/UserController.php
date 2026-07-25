@@ -118,10 +118,35 @@ class UserController extends Controller
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
         ]);
 
+        $sedeId = null;
+        $sedeName = null;
+
+        if ($request->filled('sede_id')) {
+            $sedeObj = \App\Models\Sede::find($request->sede_id);
+            if ($sedeObj) {
+                $sedeId = $sedeObj->id;
+                $sedeName = $sedeObj->name;
+            }
+        } elseif ($request->filled('sede')) {
+            $nameClean = trim($request->sede);
+            $sedeObj = \App\Models\Sede::where('name', 'LIKE', $nameClean)->first();
+            if (!$sedeObj) {
+                $nextId = \App\Models\Sede::max('id') + 1;
+                $code = 'SEDE-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+                $sedeObj = \App\Models\Sede::create([
+                    'code' => $code,
+                    'name' => $nameClean,
+                ]);
+            }
+            $sedeId = $sedeObj->id;
+            $sedeName = $sedeObj->name;
+        }
+
         $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'sede' => $request->sede,
+            'sede_id' => $sedeId,
+            'sede' => $sedeName,
         ];
 
         // Solo cambiar la contraseña si se ingresó una nueva

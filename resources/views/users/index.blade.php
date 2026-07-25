@@ -451,8 +451,14 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Sede / Ubicación (Opcional)</label>
-                    <input type="text" name="sede" id="userSedeInput" placeholder="Ej: Sede Principal, NOC, Sede Auxiliar..." class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-bold">
+                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Sede / Ubicación Asignada</label>
+                    <select name="sede_id" id="userSedeIdInput" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-bold rounded-xl focus:ring-black focus:border-black block w-full p-2.5 mb-1.5">
+                        <option value="">-- Selecciona una Sede Registrada --</option>
+                        @foreach($allSedes as $s)
+                            <option value="{{ $s->id }}">📍 [{{ $s->code }}] {{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="sede" id="userSedeInput" placeholder="O escribe aquí el nombre de una nueva sede..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-black focus:border-black block w-full p-2 font-medium">
                 </div>
 
                 <div>
@@ -493,6 +499,8 @@
             </form>
         </div>
     </div>
+</div>
+
 <!-- MODAL CREAR NUEVA SEDE -->
 <div id="createSedeModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-900/80 backdrop-blur-sm">
     <div class="relative p-4 w-full max-w-md max-h-full">
@@ -543,6 +551,7 @@
         // Limpiar inputs
         document.getElementById('userNameInput').value = '';
         document.getElementById('userEmailInput').value = '';
+        document.getElementById('userSedeIdInput').value = '';
         document.getElementById('userSedeInput').value = '';
         document.getElementById('userPasswordInput').value = '';
         document.getElementById('userConfirmInput').value = '';
@@ -564,6 +573,7 @@
         // Rellenar inputs
         document.getElementById('userNameInput').value = user.name;
         document.getElementById('userEmailInput').value = user.email;
+        document.getElementById('userSedeIdInput').value = user.sede_id || '';
         document.getElementById('userSedeInput').value = user.sede || '';
         document.getElementById('userPasswordInput').value = '';
         document.getElementById('userConfirmInput').value = '';
