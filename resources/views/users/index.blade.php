@@ -258,6 +258,134 @@
             </div>
         @endif
     </div>
+
+    <!-- SECCIÓN DE GESTIÓN DE SEDES Y UBICACIONES -->
+    <div class="space-y-4 pt-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="space-y-1">
+                <h3 class="font-heading font-extrabold text-sm text-slate-900 flex items-center">
+                    <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-slate-900"></i>
+                    Sedes y Ubicaciones de la Plataforma
+                </h3>
+                <p class="text-xs text-slate-500 font-semibold">Administra las sedes globales, edita nombres/códigos o elimina ubicaciones obsoletas</p>
+            </div>
+            <button data-modal-target="createSedeModal" data-modal-toggle="createSedeModal" class="btn-hover-grow flex items-center justify-center space-x-2 bg-slate-900 hover:bg-black text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-sm">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-white"></i>
+                <span>Crear Nueva Sede</span>
+            </button>
+        </div>
+
+        <!-- Tabla de Sedes -->
+        <div class="bw-card rounded-2xl overflow-hidden shadow-sm bg-white border border-slate-200">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-800">
+                    <thead class="text-xs uppercase bg-slate-100 text-slate-700 border-b border-slate-200 font-extrabold tracking-wider">
+                        <tr>
+                            <th scope="col" class="px-6 py-4">Código Sede</th>
+                            <th scope="col" class="px-6 py-4">Nombre de la Sede</th>
+                            <th scope="col" class="px-6 py-4">Descripción</th>
+                            <th scope="col" class="px-6 py-4 text-center">Empresas / Usuarios</th>
+                            <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        @forelse($allSedes as $sedeItem)
+                            <tr class="bg-white hover:bg-slate-50 transition-colors">
+                                <!-- Código -->
+                                <td class="px-6 py-4 font-mono text-xs whitespace-nowrap">
+                                    <span class="bg-slate-100 text-slate-900 font-black text-xs px-3 py-1.5 rounded-xl border border-slate-200 inline-flex items-center">
+                                        📍 {{ $sedeItem->code }}
+                                    </span>
+                                </td>
+                                <!-- Nombre -->
+                                <td class="px-6 py-4 whitespace-nowrap font-extrabold text-slate-900 text-sm">
+                                    {{ $sedeItem->name }}
+                                </td>
+                                <!-- Descripción -->
+                                <td class="px-6 py-4 text-xs font-medium text-slate-500 max-w-xs truncate">
+                                    {{ $sedeItem->description ?? 'Sin descripción adicional' }}
+                                </td>
+                                <!-- Usuarios vinculados -->
+                                <td class="px-6 py-4 text-center font-bold text-xs whitespace-nowrap">
+                                    <span class="bg-slate-100 text-slate-800 px-3 py-1 rounded-xl border border-slate-200 font-mono font-extrabold">
+                                        {{ $sedeItem->users()->count() }} usuario(s)
+                                    </span>
+                                </td>
+                                <!-- Acciones -->
+                                <td class="px-6 py-4 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <!-- Editar Sede -->
+                                        <button data-modal-target="editSedeModal-{{ $sedeItem->id }}" data-modal-toggle="editSedeModal-{{ $sedeItem->id }}" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white hover:bg-slate-100 font-extrabold text-xs px-3 py-1.5 rounded-xl border border-slate-300 shadow-xs">
+                                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                            <span>Editar</span>
+                                        </button>
+
+                                        <!-- Eliminar Sede -->
+                                        <form action="{{ route('sedes.destroy', $sedeItem) }}" method="POST" onsubmit="return confirm('¿Eliminar la sede {{ $sedeItem->name }} [{{ $sedeItem->code }}]? Los usuarios vinculados quedarán sin sede.')" class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-red-600 bg-white hover:bg-red-50 border border-red-200 font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-xs">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Borrar</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- MODAL EDITAR SEDE -->
+                            <div id="editSedeModal-{{ $sedeItem->id }}" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-900/80 backdrop-blur-sm">
+                                <div class="relative p-4 w-full max-w-md max-h-full">
+                                    <div class="relative bg-white rounded-2xl shadow-2xl border border-slate-300">
+                                        <div class="flex items-center justify-between p-4 border-b border-slate-200 rounded-t bg-slate-50">
+                                            <h3 class="text-sm font-extrabold text-slate-900 flex items-center">
+                                                <i data-lucide="edit-3" class="w-4 h-4 mr-2 text-slate-900"></i>
+                                                Editar Sede: {{ $sedeItem->name }}
+                                            </h3>
+                                            <button type="button" class="text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="editSedeModal-{{ $sedeItem->id }}">
+                                                <i data-lucide="x" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                        <form action="{{ route('sedes.update', $sedeItem) }}" method="POST" class="p-4 space-y-4">
+                                            @csrf
+                                            @method('PUT')
+                                            
+                                            <div>
+                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Código Único de Sede *</label>
+                                                <input type="text" name="code" value="{{ $sedeItem->code }}" required class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-mono font-bold">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Nombre de la Sede *</label>
+                                                <input type="text" name="name" value="{{ $sedeItem->name }}" required class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-bold">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Descripción / Notas (Opcional)</label>
+                                                <textarea name="description" rows="2" placeholder="Notas sobre la dirección, ciudad o referencias..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-medium">{{ $sedeItem->description }}</textarea>
+                                            </div>
+
+                                            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                                                <button data-modal-hide="editSedeModal-{{ $sedeItem->id }}" type="button" class="text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs px-4 py-2 border border-slate-300">Cancelar</button>
+                                                <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-4 py-2 shadow-md">Actualizar Sede</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-500 font-medium">
+                                    <i data-lucide="map-pin-off" class="w-8 h-8 mx-auto mb-2 text-slate-400"></i>
+                                    No hay sedes registradas en el sistema.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- FLOWBITE USER MODAL (CREAR / EDITAR) -->
@@ -329,6 +457,44 @@
                     <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-5 py-2.5 shadow-md">
                         Guardar Usuario
                     </button>
+                </div>
+            </form>
+        </div>
+    </div>
+<!-- MODAL CREAR NUEVA SEDE -->
+<div id="createSedeModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-900/80 backdrop-blur-sm">
+    <div class="relative p-4 w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-2xl shadow-2xl border border-slate-300">
+            <div class="flex items-center justify-between p-4 border-b border-slate-200 rounded-t bg-slate-50">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center">
+                    <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-slate-900"></i>
+                    Registrar Nueva Sede
+                </h3>
+                <button type="button" class="text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="createSedeModal">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <form action="{{ route('sedes.store') }}" method="POST" class="p-4 space-y-4">
+                @csrf
+                
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Nombre de la Sede *</label>
+                    <input type="text" name="name" required placeholder="Ej: Sede Bogotá Norte, Sede Principal, etc." class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Código Personalizado (Opcional)</label>
+                    <input type="text" name="code" placeholder="Ej: SEDE-001 (Se autogenera si se deja en blanco)" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-mono font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Descripción / Notas (Opcional)</label>
+                    <textarea name="description" rows="2" placeholder="Ubicación física, dirección o notas de la sede..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-medium"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button data-modal-hide="createSedeModal" type="button" class="text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs px-4 py-2 border border-slate-300">Cancelar</button>
+                    <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-4 py-2 shadow-md">Guardar Sede</button>
                 </div>
             </form>
         </div>

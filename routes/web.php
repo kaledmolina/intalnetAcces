@@ -9,6 +9,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SedeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -64,10 +65,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/backups/download', [BackupController::class, 'download'])->name('backups.download');
     Route::post('/backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
 
-    // Administración de Usuarios (Solo Superadmin)
+    // Administración de Usuarios y Sedes (Solo Superadmin)
     Route::middleware('superadmin')->group(function () {
         Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::patch('/users/{user}/assign-sede', [UserController::class, 'assignSede'])->name('users.assign-sede');
         Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
+        Route::resource('sedes', SedeController::class)->only(['store', 'update', 'destroy']);
     });
 });
