@@ -17,8 +17,20 @@
     <script>
         const originalWarn = console.warn;
         console.warn = function(...args) {
-            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used')) return;
+            if (args[0] && typeof args[0] === 'string' && (
+                args[0].includes('cdn.tailwindcss.com should not be used') ||
+                args[0].includes('Flowbite: Instance with ID') ||
+                args[0].includes('has not been initialized')
+            )) return;
             originalWarn.apply(console, args);
+        };
+        const originalError = console.error;
+        console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && (
+                args[0].includes('Flowbite: Instance with ID') ||
+                args[0].includes('has not been initialized')
+            )) return;
+            originalError.apply(console, args);
         };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
