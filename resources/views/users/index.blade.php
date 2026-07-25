@@ -349,6 +349,7 @@
                                         <form action="{{ route('sedes.update', $sedeItem) }}" method="POST" class="p-4 space-y-4">
                                             @csrf
                                             @method('PUT')
+                                            <input type="hidden" name="users_managed" value="1">
                                             
                                             <div>
                                                 <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Código Único de Sede *</label>
@@ -365,9 +366,40 @@
                                                 <textarea name="description" rows="2" placeholder="Notas sobre la dirección, ciudad o referencias..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-medium">{{ $sedeItem->description }}</textarea>
                                             </div>
 
+                                            <!-- GESTIÓN DE USUARIOS DE LA SEDE -->
+                                            <div class="space-y-2 pt-2 border-t border-slate-100">
+                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1 flex items-center justify-between">
+                                                    <span>Empresas / Usuarios Asignados</span>
+                                                    <span class="text-[9px] text-slate-400 font-semibold lowercase">Marca para agregar, desmarca para quitar</span>
+                                                </label>
+                                                <div class="max-h-48 overflow-y-auto space-y-1.5 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                                                    @foreach($allUsers as $usr)
+                                                        @php $isAssigned = ($usr->sede_id == $sedeItem->id); @endphp
+                                                        <label class="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors cursor-pointer border border-transparent hover:border-slate-200">
+                                                            <div class="flex items-center space-x-2.5">
+                                                                <input type="checkbox" name="user_ids[]" value="{{ $usr->id }}" {{ $isAssigned ? 'checked' : '' }} class="w-4 h-4 text-black border-slate-300 rounded focus:ring-black focus:ring-1">
+                                                                <div class="text-xs">
+                                                                    <span class="font-extrabold text-slate-900 block leading-tight">{{ $usr->name }}</span>
+                                                                    <span class="text-[10px] text-slate-500 font-medium">{{ $usr->email }}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                @if($isAssigned)
+                                                                    <span class="bg-black text-white text-[9px] font-black px-2 py-0.5 rounded-md">Asignado</span>
+                                                                @elseif($usr->sedeRelation)
+                                                                    <span class="bg-slate-200 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded-md">{{ $usr->sedeRelation->name }}</span>
+                                                                @else
+                                                                    <span class="bg-slate-100 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md">Sin Sede</span>
+                                                                @endif
+                                                            </div>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+
                                             <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
                                                 <button data-modal-hide="editSedeModal-{{ $sedeItem->id }}" type="button" class="text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs px-4 py-2 border border-slate-300">Cancelar</button>
-                                                <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-4 py-2 shadow-md">Actualizar Sede</button>
+                                                <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-4 py-2 shadow-md">Actualizar Sede y Usuarios</button>
                                             </div>
                                         </form>
                                     </div>

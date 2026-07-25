@@ -29,7 +29,8 @@ class UserController extends Controller
         });
 
         $allSedes = \App\Models\Sede::orderBy('name', 'asc')->get();
-        return view('users.index', compact('users', 'allSedes'));
+        $allUsers = User::orderBy('name', 'asc')->get();
+        return view('users.index', compact('users', 'allSedes', 'allUsers'));
     }
 
     /**

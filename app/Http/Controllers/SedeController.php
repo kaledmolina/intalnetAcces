@@ -63,7 +63,28 @@ class SedeController extends Controller
         // Sincronizar el nombre en la tabla users para consistencia
         User::where('sede_id', $sede->id)->update(['sede' => $sede->name]);
 
-        return back()->with('success', "La sede '{$oldName}' ha sido actualizada correctamente.");
+        // Gestionar vinculación / desvinculación de usuarios
+        if ($request->has('users_managed')) {
+            $selectedUserIds = array_map('intval', $request->input('user_ids', []));
+
+            // Quitar la sede a usuarios desmarcados
+            User::where('sede_id', $sede->id)
+                ->whereNotIn('id', $selectedUserIds)
+                ->update([
+                    'sede_id' => null,
+                    'sede' => null,
+                ]);
+
+            // Asignar la sede a usuarios marcados
+            if (!empty($selectedUserIds)) {
+                User::whereIn('id', $selectedUserIds)->update([
+                    'sede_id' => $sede->id,
+                    'sede' => $sede->name,
+                ]);
+            }
+        }
+
+        return back()->with('success', "La sede '{$oldName}' y sus usuarios asignados se han actualizado correctamente.");
     }
 
     /**
