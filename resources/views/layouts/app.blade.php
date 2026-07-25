@@ -777,21 +777,18 @@
         </div>
     </div>
 
-    @php
-        $layoutSedes = \App\Models\Sede::orderBy('name', 'asc')->get();
-    @endphp
-    <!-- MODAL REGISTRAR / VINCULAR MI SEDE -->
+    <!-- MODAL REGISTRAR MI SEDE -->
     <div id="registerUserSedeModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-950/80 backdrop-blur-md transition-all">
         <div class="relative p-4 w-full max-w-md max-h-full">
             <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
                 <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-black text-white flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shrink-0">
-                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                            <i data-lucide="building" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm font-extrabold tracking-tight">Registrar / Vincular Sede</h3>
-                            <p class="text-[11px] text-slate-300 font-medium">Asigna una sede a tu cuenta corporativa</p>
+                            <h3 class="text-sm font-extrabold tracking-tight">Registrar Mi Sede</h3>
+                            <p class="text-[11px] text-slate-300 font-medium">Crea la ubicación para gestionar tus equipos y personal</p>
                         </div>
                     </div>
                     <button type="button" class="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl text-sm w-8 h-8 inline-flex justify-center items-center transition-all" data-modal-hide="registerUserSedeModal">
@@ -802,27 +799,19 @@
                 <form action="{{ route('profile.register-sede') }}" method="POST" class="p-6 space-y-4">
                     @csrf
 
-                    @if($layoutSedes->count() > 0)
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Opción 1: Seleccionar Sede Existente</label>
-                            <select name="sede_id" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-bold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full p-2.5">
-                                <option value="">-- Elige una Sede Registrada --</option>
-                                @foreach($layoutSedes as $ls)
-                                    <option value="{{ $ls->id }}">📍 [{{ $ls->code }}] {{ $ls->name }}</option>
-                                @endforeach
-                            </select>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Nombre de la Sede *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                            </div>
+                            <input type="text" name="sede_name" required placeholder="Ej: Sede Principal, Sede Bogotá, NOC..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-extrabold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full pl-9 p-2.5 transition-colors">
                         </div>
-
-                        <div class="relative flex py-1 items-center">
-                            <div class="flex-grow border-t border-slate-200"></div>
-                            <span class="flex-shrink font-mono uppercase text-[10px] text-slate-400 font-extrabold px-3 bg-white">O bien</span>
-                            <div class="flex-grow border-t border-slate-200"></div>
-                        </div>
-                    @endif
+                    </div>
 
                     <div>
-                        <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Escribir Nombre de Nueva Sede *</label>
-                        <input type="text" name="sede_name" placeholder="Ej: Sede Principal, Sede Bogotá, NOC..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-extrabold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full p-2.5">
+                        <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Descripción / Ubicación (Opcional)</label>
+                        <textarea name="description" rows="2" placeholder="Notas sobre la dirección física o ciudad..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full p-2.5 font-medium transition-colors"></textarea>
                     </div>
 
                     <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
@@ -831,7 +820,7 @@
                         </button>
                         <button type="submit" class="btn-hover-grow text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-5 py-2.5 shadow-md flex items-center space-x-1.5">
                             <i data-lucide="check-circle" class="w-4 h-4 text-white"></i>
-                            <span>Vincular Mi Sede</span>
+                            <span>Registrar Mi Sede</span>
                         </button>
                     </div>
                 </form>

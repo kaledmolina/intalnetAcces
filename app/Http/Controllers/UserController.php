@@ -283,7 +283,7 @@ class UserController extends Controller
     }
 
     /**
-     * Permite a un usuario registrar o seleccionar su propia sede cuando está sin sede.
+     * Permite a un usuario registrar exclusivamente su propia nueva sede cuando está sin sede.
      */
     public function registerMySede(Request $request)
     {
@@ -291,45 +291,27 @@ class UserController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'sede_id' => 'nullable|exists:sedes,id',
-            'sede_name' => 'nullable|string|max:255',
+            'sede_name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:500',
+        ], [
+            'sede_name.required' => 'El nombre de la sede es obligatorio.',
         ]);
 
-        $sedeId = null;
-        $sedeName = null;
+        $nameClean = trim($request->sede_name);
+        $nextId = \App\Models\Sede::max('id') + 1;
+        $code = 'SEDE-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
 
-        if ($request->filled('sede_id')) {
-            $sedeObj = \App\Models\Sede::find($request->sede_id);
-            if ($sedeObj) {
-                $sedeId = $sedeObj->id;
-                $sedeName = $sedeObj->name;
-            }
-        }
-
-        if (!$sedeId && $request->filled('sede_name')) {
-            $nameClean = trim($request->sede_name);
-            $sedeObj = \App\Models\Sede::where('name', 'LIKE', $nameClean)->first();
-            if (!$sedeObj) {
-                $nextId = \App\Models\Sede::max('id') + 1;
-                $code = 'SEDE-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
-                $sedeObj = \App\Models\Sede::create([
-                    'code' => $code,
-                    'name' => $nameClean,
-                ]);
-            }
-            $sedeId = $sedeObj->id;
-            $sedeName = $sedeObj->name;
-        }
-
-        if (!$sedeId) {
-            return back()->with('error', 'Por favor selecciona una sede existente o escribe el nombre de tu nueva sede.');
-        }
+        $sedeObj = \App\Models\Sede::create([
+            'code' => $code,
+            'name' => $nameClean,
+            'description' => $request->description,
+        ]);
 
         $user->update([
-            'sede_id' => $sedeId,
-            'sede' => $sedeName,
+            'sede_id' => $sedeObj->id,
+            'sede' => $sedeObj->name,
         ]);
 
-        return back()->with('success', "¡Excelente! Tu cuenta ha sido vinculada correctamente a la sede '{$sedeName}'.");
+        return back()->with('success', "¡Excelente! Tu sede '{$sedeObj->name}' [{$code}] ha sido registrada correctamente.");
     }
 }
