@@ -334,50 +334,86 @@
                             </tr>
 
                             <!-- MODAL EDITAR SEDE -->
-                            <div id="editSedeModal-{{ $sedeItem->id }}" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-900/80 backdrop-blur-sm">
-                                <div class="relative p-4 w-full max-w-md max-h-full">
-                                    <div class="relative bg-white rounded-2xl shadow-2xl border border-slate-300">
-                                        <div class="flex items-center justify-between p-4 border-b border-slate-200 rounded-t bg-slate-50">
-                                            <h3 class="text-sm font-extrabold text-slate-900 flex items-center">
-                                                <i data-lucide="edit-3" class="w-4 h-4 mr-2 text-slate-900"></i>
-                                                Editar Sede: {{ $sedeItem->name }}
-                                            </h3>
-                                            <button type="button" class="text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="editSedeModal-{{ $sedeItem->id }}">
+                            <div id="editSedeModal-{{ $sedeItem->id }}" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-950/80 backdrop-blur-md transition-all">
+                                <div class="relative p-4 w-full max-w-lg max-h-full">
+                                    <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+                                        <!-- Header banner elegante -->
+                                        <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-black text-white flex items-center justify-between">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shrink-0">
+                                                    <i data-lucide="building-2" class="w-5 h-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 class="text-sm font-extrabold tracking-tight flex items-center gap-2">
+                                                        <span>Editar Sede</span>
+                                                        <span class="bg-white/20 text-white text-[10px] font-mono px-2 py-0.5 rounded-md font-bold">{{ $sedeItem->code }}</span>
+                                                    </h3>
+                                                    <p class="text-[11px] text-slate-300 font-medium">Modifica los detalles y gestiona las empresas asignadas</p>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl text-sm w-8 h-8 inline-flex justify-center items-center transition-all" data-modal-hide="editSedeModal-{{ $sedeItem->id }}">
                                                 <i data-lucide="x" class="w-4 h-4"></i>
                                             </button>
                                         </div>
-                                        <form action="{{ route('sedes.update', $sedeItem) }}" method="POST" class="p-4 space-y-4">
+
+                                        <!-- Formulario -->
+                                        <form action="{{ route('sedes.update', $sedeItem) }}" method="POST" class="p-6 space-y-4">
                                             @csrf
                                             @method('PUT')
                                             <input type="hidden" name="users_managed" value="1">
                                             
-                                            <div>
-                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Código Único de Sede *</label>
-                                                <input type="text" name="code" value="{{ $sedeItem->code }}" required class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-mono font-bold">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <!-- Código -->
+                                                <div>
+                                                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Código Único *</label>
+                                                    <div class="relative">
+                                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                                            <i data-lucide="hash" class="w-4 h-4"></i>
+                                                        </div>
+                                                        <input type="text" name="code" value="{{ $sedeItem->code }}" required class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono font-extrabold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full pl-9 p-2.5 transition-colors">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Nombre -->
+                                                <div>
+                                                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Nombre de la Sede *</label>
+                                                    <div class="relative">
+                                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                                        </div>
+                                                        <input type="text" name="name" value="{{ $sedeItem->name }}" required class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-extrabold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full pl-9 p-2.5 transition-colors">
+                                                    </div>
+                                                </div>
                                             </div>
 
+                                            <!-- Descripción -->
                                             <div>
-                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Nombre de la Sede *</label>
-                                                <input type="text" name="name" value="{{ $sedeItem->name }}" required class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-bold">
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Descripción / Notas (Opcional)</label>
-                                                <textarea name="description" rows="2" placeholder="Notas sobre la dirección, ciudad o referencias..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-medium">{{ $sedeItem->description }}</textarea>
+                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Descripción / Ubicación (Opcional)</label>
+                                                <textarea name="description" rows="2" placeholder="Notas sobre la dirección física o ciudad..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full p-2.5 font-medium transition-colors">{{ $sedeItem->description }}</textarea>
                                             </div>
 
                                             <!-- GESTIÓN DE USUARIOS DE LA SEDE -->
-                                            <div class="space-y-2 pt-2 border-t border-slate-100">
-                                                <label class="block text-[10px] font-black uppercase text-slate-700 mb-1 flex items-center justify-between">
-                                                    <span>Empresas / Usuarios Asignados</span>
-                                                    <span class="text-[9px] text-slate-400 font-semibold lowercase">Marca para agregar, desmarca para quitar</span>
-                                                </label>
-                                                <div class="max-h-48 overflow-y-auto space-y-1.5 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                                            <div class="space-y-2 pt-3 border-t border-slate-200">
+                                                <div class="flex items-center justify-between">
+                                                    <label class="text-[10px] font-black uppercase text-slate-800 flex items-center">
+                                                        <i data-lucide="users" class="w-3.5 h-3.5 mr-1.5 text-slate-900"></i>
+                                                        Empresas / Usuarios Asignados
+                                                    </label>
+                                                    <span class="text-[10px] bg-slate-100 text-slate-800 font-extrabold px-2 py-0.5 rounded-full border border-slate-200">
+                                                        {{ $sedeItem->users()->count() }} asignado(s)
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-400 font-medium">Selecciona las cuentas de usuario que pertenecen a esta sede:</p>
+                                                
+                                                <div class="max-h-52 overflow-y-auto space-y-1.5 p-2 bg-slate-50 border border-slate-200 rounded-2xl">
                                                     @foreach($allUsers as $usr)
                                                         @php $isAssigned = ($usr->sede_id == $sedeItem->id); @endphp
-                                                        <label class="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors cursor-pointer border border-transparent hover:border-slate-200">
-                                                            <div class="flex items-center space-x-2.5">
+                                                        <label class="flex items-center justify-between p-2.5 rounded-xl hover:bg-white transition-all cursor-pointer border border-transparent hover:border-slate-200 shadow-xs">
+                                                            <div class="flex items-center space-x-3">
                                                                 <input type="checkbox" name="user_ids[]" value="{{ $usr->id }}" {{ $isAssigned ? 'checked' : '' }} class="w-4 h-4 text-black border-slate-300 rounded focus:ring-black focus:ring-1">
+                                                                <div class="w-8 h-8 rounded-lg bg-black text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                                                                    {{ strtoupper(substr($usr->name, 0, 2)) }}
+                                                                </div>
                                                                 <div class="text-xs">
                                                                     <span class="font-extrabold text-slate-900 block leading-tight">{{ $usr->name }}</span>
                                                                     <span class="text-[10px] text-slate-500 font-medium">{{ $usr->email }}</span>
@@ -385,11 +421,11 @@
                                                             </div>
                                                             <div>
                                                                 @if($isAssigned)
-                                                                    <span class="bg-black text-white text-[9px] font-black px-2 py-0.5 rounded-md">Asignado</span>
+                                                                    <span class="bg-black text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg shadow-xs">Asignado</span>
                                                                 @elseif($usr->sedeRelation)
-                                                                    <span class="bg-slate-200 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded-md">{{ $usr->sedeRelation->name }}</span>
+                                                                    <span class="bg-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-1 rounded-lg">{{ $usr->sedeRelation->name }}</span>
                                                                 @else
-                                                                    <span class="bg-slate-100 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md">Sin Sede</span>
+                                                                    <span class="bg-slate-100 text-slate-400 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-200">Sin Sede</span>
                                                                 @endif
                                                             </div>
                                                         </label>
@@ -397,9 +433,15 @@
                                                 </div>
                                             </div>
 
-                                            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
-                                                <button data-modal-hide="editSedeModal-{{ $sedeItem->id }}" type="button" class="text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs px-4 py-2 border border-slate-300">Cancelar</button>
-                                                <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-4 py-2 shadow-md">Actualizar Sede y Usuarios</button>
+                                            <!-- Botones de Acción -->
+                                            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
+                                                <button data-modal-hide="editSedeModal-{{ $sedeItem->id }}" type="button" class="btn-hover-grow text-slate-700 bg-white hover:bg-slate-100 font-extrabold rounded-xl text-xs px-4 py-2.5 border border-slate-300 shadow-xs">
+                                                    Cancelar
+                                                </button>
+                                                <button type="submit" class="btn-hover-grow text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-5 py-2.5 shadow-md flex items-center space-x-1.5">
+                                                    <i data-lucide="check-circle" class="w-4 h-4 text-white"></i>
+                                                    <span>Actualizar Sede y Usuarios</span>
+                                                </button>
                                             </div>
                                         </form>
                                     </div>
@@ -502,39 +544,67 @@
 </div>
 
 <!-- MODAL CREAR NUEVA SEDE -->
-<div id="createSedeModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-900/80 backdrop-blur-sm">
-    <div class="relative p-4 w-full max-w-md max-h-full">
-        <div class="relative bg-white rounded-2xl shadow-2xl border border-slate-300">
-            <div class="flex items-center justify-between p-4 border-b border-slate-200 rounded-t bg-slate-50">
-                <h3 class="text-sm font-extrabold text-slate-900 flex items-center">
-                    <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-slate-900"></i>
-                    Registrar Nueva Sede
-                </h3>
-                <button type="button" class="text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="createSedeModal">
+<div id="createSedeModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-950/80 backdrop-blur-md transition-all">
+    <div class="relative p-4 w-full max-w-lg max-h-full">
+        <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+            <!-- Header banner elegante -->
+            <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-black text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shrink-0">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold tracking-tight">Registrar Nueva Sede</h3>
+                        <p class="text-[11px] text-slate-300 font-medium">Crea una nueva ubicación para agrupar usuarios y dispositivos</p>
+                    </div>
+                </div>
+                <button type="button" class="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl text-sm w-8 h-8 inline-flex justify-center items-center transition-all" data-modal-hide="createSedeModal">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-            <form action="{{ route('sedes.store') }}" method="POST" class="p-4 space-y-4">
+
+            <form action="{{ route('sedes.store') }}" method="POST" class="p-6 space-y-4">
                 @csrf
                 
-                <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Nombre de la Sede *</label>
-                    <input type="text" name="name" required placeholder="Ej: Sede Bogotá Norte, Sede Principal, etc." class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-bold">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Nombre -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Nombre de la Sede *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                <i data-lucide="building" class="w-4 h-4"></i>
+                            </div>
+                            <input type="text" name="name" required placeholder="Ej: Sede Bogotá Norte, Sede Principal, etc." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-extrabold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full pl-9 p-2.5 transition-colors">
+                        </div>
+                    </div>
+
+                    <!-- Código Personalizado -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Código Personalizado (Opcional)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                <i data-lucide="hash" class="w-4 h-4"></i>
+                            </div>
+                            <input type="text" name="code" placeholder="Ej: SEDE-001 (Se autogenera si se deja en blanco)" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono font-extrabold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full pl-9 p-2.5 transition-colors">
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Descripción -->
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Código Personalizado (Opcional)</label>
-                    <input type="text" name="code" placeholder="Ej: SEDE-001 (Se autogenera si se deja en blanco)" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-mono font-bold">
+                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Descripción / Ubicación (Opcional)</label>
+                    <textarea name="description" rows="2" placeholder="Notas sobre la dirección física, ciudad o punto de referencia..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full p-2.5 font-medium transition-colors"></textarea>
                 </div>
 
-                <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Descripción / Notas (Opcional)</label>
-                    <textarea name="description" rows="2" placeholder="Ubicación física, dirección o notas de la sede..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-medium"></textarea>
-                </div>
-
-                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
-                    <button data-modal-hide="createSedeModal" type="button" class="text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs px-4 py-2 border border-slate-300">Cancelar</button>
-                    <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-4 py-2 shadow-md">Guardar Sede</button>
+                <!-- Footer buttons -->
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button data-modal-hide="createSedeModal" type="button" class="btn-hover-grow text-slate-700 bg-white hover:bg-slate-100 font-extrabold rounded-xl text-xs px-4 py-2.5 border border-slate-300 shadow-xs">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-hover-grow text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-5 py-2.5 shadow-md flex items-center space-x-1.5">
+                        <i data-lucide="plus" class="w-4 h-4 text-white"></i>
+                        <span>Guardar Sede</span>
+                    </button>
                 </div>
             </form>
         </div>
