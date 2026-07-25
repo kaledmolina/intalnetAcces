@@ -411,7 +411,15 @@
                         </div>
                         <div class="hidden md:block">
                             <span class="text-xs font-bold text-slate-900 block leading-none">{{ Auth::user()->name }}</span>
-                            <span class="text-[10px] text-slate-500 block mt-0.5 leading-none">{{ Auth::user()->email }}</span>
+                            @if(Auth::user()->sedeRelation)
+                                <span class="text-[10px] text-slate-500 font-semibold block mt-0.5 leading-none">📍 {{ Auth::user()->sedeRelation->name }}</span>
+                            @elseif(Auth::user()->sede)
+                                <span class="text-[10px] text-slate-500 font-semibold block mt-0.5 leading-none">📍 {{ Auth::user()->sede }}</span>
+                            @else
+                                <button type="button" data-modal-target="registerUserSedeModal" data-modal-toggle="registerUserSedeModal" class="text-[10px] text-red-600 font-extrabold block mt-0.5 leading-none hover:underline">
+                                    ⚠️ Sin Sede (Registrar)
+                                </button>
+                            @endif
                         </div>
                         <!-- Edit Profile / Company Button -->
                         <button type="button" data-modal-target="profileModal" data-modal-toggle="profileModal" class="btn-hover-grow p-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl transition-colors shadow-sm" title="Editar Nombre de Empresa / Perfil">
@@ -465,6 +473,27 @@
             <!-- Main Page View Content -->
             <main class="flex-1 p-6 md:p-8 overflow-y-auto">
                 <div class="animate-fade-in">
+                    @if(!Auth::user()->sede_id && !Auth::user()->sede)
+                        <div class="mb-6 p-4 md:p-5 bg-gradient-to-r from-red-50 via-amber-50 to-red-50 border border-red-200 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                            <div class="flex items-center space-x-3.5">
+                                <div class="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                    <i data-lucide="map-pin-off" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-black uppercase text-red-700 tracking-wider flex items-center gap-2">
+                                        <span>Estado: Sin Sede Asignada</span>
+                                        <span class="bg-red-100 text-red-800 text-[9px] font-extrabold px-2 py-0.5 rounded-md border border-red-200">Acción Requerida</span>
+                                    </h4>
+                                    <p class="text-xs text-slate-700 font-medium mt-0.5">Actualmente tu cuenta no está vinculada a una sede. Registra tu sede para administrar tus huelleros y colaboradores.</p>
+                                </div>
+                            </div>
+                            <button type="button" data-modal-target="registerUserSedeModal" data-modal-toggle="registerUserSedeModal" class="btn-hover-grow shrink-0 inline-flex items-center space-x-2 bg-black hover:bg-slate-800 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                <span>Registrar / Vincular Mi Sede</span>
+                            </button>
+                        </div>
+                    @endif
+
                     @yield('content')
                 </div>
             </main>
@@ -741,6 +770,68 @@
                         </button>
                         <button type="submit" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-5 py-2.5 shadow-md">
                             Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @php
+        $layoutSedes = \App\Models\Sede::orderBy('name', 'asc')->get();
+    @endphp
+    <!-- MODAL REGISTRAR / VINCULAR MI SEDE -->
+    <div id="registerUserSedeModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-slate-950/80 backdrop-blur-md transition-all">
+        <div class="relative p-4 w-full max-w-md max-h-full">
+            <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+                <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-black text-white flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shrink-0">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-extrabold tracking-tight">Registrar / Vincular Sede</h3>
+                            <p class="text-[11px] text-slate-300 font-medium">Asigna una sede a tu cuenta corporativa</p>
+                        </div>
+                    </div>
+                    <button type="button" class="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl text-sm w-8 h-8 inline-flex justify-center items-center transition-all" data-modal-hide="registerUserSedeModal">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form action="{{ route('profile.register-sede') }}" method="POST" class="p-6 space-y-4">
+                    @csrf
+
+                    @if($layoutSedes->count() > 0)
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Opción 1: Seleccionar Sede Existente</label>
+                            <select name="sede_id" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-bold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full p-2.5">
+                                <option value="">-- Elige una Sede Registrada --</option>
+                                @foreach($layoutSedes as $ls)
+                                    <option value="{{ $ls->id }}">📍 [{{ $ls->code }}] {{ $ls->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="relative flex py-1 items-center">
+                            <div class="flex-grow border-t border-slate-200"></div>
+                            <span class="flex-shrink font-mono uppercase text-[10px] text-slate-400 font-extrabold px-3 bg-white">O bien</span>
+                            <div class="flex-grow border-t border-slate-200"></div>
+                        </div>
+                    @endif
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Escribir Nombre de Nueva Sede *</label>
+                        <input type="text" name="sede_name" placeholder="Ej: Sede Principal, Sede Bogotá, NOC..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-extrabold rounded-xl focus:ring-2 focus:ring-black focus:border-black block w-full p-2.5">
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
+                        <button data-modal-hide="registerUserSedeModal" type="button" class="btn-hover-grow text-slate-700 bg-white hover:bg-slate-100 font-extrabold rounded-xl text-xs px-4 py-2.5 border border-slate-300 shadow-xs">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-hover-grow text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-5 py-2.5 shadow-md flex items-center space-x-1.5">
+                            <i data-lucide="check-circle" class="w-4 h-4 text-white"></i>
+                            <span>Vincular Mi Sede</span>
                         </button>
                     </div>
                 </form>

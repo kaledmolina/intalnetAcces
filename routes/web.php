@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/sync', [DashboardController::class, 'sync'])->name('dashboard.sync');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/register-sede', [UserController::class, 'registerMySede'])->name('profile.register-sede');
 
     // Empleados, Captura de Huella, Confirmación, Sondeo y Importación ISAPI
     Route::post('/employees/capture-fingerprint', [EmployeeController::class, 'captureFingerprint'])->name('employees.capture-fingerprint');

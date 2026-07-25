@@ -281,4 +281,55 @@ class UserController extends Controller
 
         return back()->with('error', 'Por favor selecciona o escribe el nombre de una sede.');
     }
+
+    /**
+     * Permite a un usuario registrar o seleccionar su propia sede cuando está sin sede.
+     */
+    public function registerMySede(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $request->validate([
+            'sede_id' => 'nullable|exists:sedes,id',
+            'sede_name' => 'nullable|string|max:255',
+        ]);
+
+        $sedeId = null;
+        $sedeName = null;
+
+        if ($request->filled('sede_id')) {
+            $sedeObj = \App\Models\Sede::find($request->sede_id);
+            if ($sedeObj) {
+                $sedeId = $sedeObj->id;
+                $sedeName = $sedeObj->name;
+            }
+        }
+
+        if (!$sedeId && $request->filled('sede_name')) {
+            $nameClean = trim($request->sede_name);
+            $sedeObj = \App\Models\Sede::where('name', 'LIKE', $nameClean)->first();
+            if (!$sedeObj) {
+                $nextId = \App\Models\Sede::max('id') + 1;
+                $code = 'SEDE-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+                $sedeObj = \App\Models\Sede::create([
+                    'code' => $code,
+                    'name' => $nameClean,
+                ]);
+            }
+            $sedeId = $sedeObj->id;
+            $sedeName = $sedeObj->name;
+        }
+
+        if (!$sedeId) {
+            return back()->with('error', 'Por favor selecciona una sede existente o escribe el nombre de tu nueva sede.');
+        }
+
+        $user->update([
+            'sede_id' => $sedeId,
+            'sede' => $sedeName,
+        ]);
+
+        return back()->with('success', "¡Excelente! Tu cuenta ha sido vinculada correctamente a la sede '{$sedeName}'.");
+    }
 }
