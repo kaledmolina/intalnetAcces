@@ -495,6 +495,7 @@
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Sede / Ubicación Asignada</label>
                     <select name="sede_id" id="userSedeIdInput" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-bold rounded-xl focus:ring-black focus:border-black block w-full p-2.5 mb-1.5">
+                        <option value="none">❌ Ninguna Sede (Desvincular / Quitar Sede)</option>
                         <option value="">-- Selecciona una Sede Registrada --</option>
                         @foreach($allSedes as $s)
                             <option value="{{ $s->id }}">📍 [{{ $s->code }}] {{ $s->name }}</option>
@@ -643,8 +644,8 @@
         // Rellenar inputs
         document.getElementById('userNameInput').value = user.name;
         document.getElementById('userEmailInput').value = user.email;
-        document.getElementById('userSedeIdInput').value = user.sede_id || '';
-        document.getElementById('userSedeInput').value = user.sede || '';
+        document.getElementById('userSedeIdInput').value = user.sede_id ? user.sede_id : (user.sede ? '' : 'none');
+        document.getElementById('userSedeInput').value = user.sede_id ? '' : (user.sede || '');
         document.getElementById('userPasswordInput').value = '';
         document.getElementById('userConfirmInput').value = '';
         document.getElementById('userPasswordInput').required = false;

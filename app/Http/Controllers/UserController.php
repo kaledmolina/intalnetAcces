@@ -54,15 +54,13 @@ class UserController extends Controller
         $sedeId = null;
         $sedeName = null;
 
-        if ($request->filled('sede_id')) {
+        if ($request->filled('sede_id') && $request->sede_id !== 'none') {
             $sedeObj = \App\Models\Sede::find($request->sede_id);
             if ($sedeObj) {
                 $sedeId = $sedeObj->id;
                 $sedeName = $sedeObj->name;
             }
-        }
-
-        if (!$sedeId && $request->filled('sede')) {
+        } elseif ($request->filled('sede')) {
             $nameClean = trim($request->sede);
             $sedeObj = \App\Models\Sede::where('name', 'LIKE', $nameClean)->first();
             if (!$sedeObj) {
@@ -73,17 +71,6 @@ class UserController extends Controller
                     'name' => $nameClean,
                 ]);
             }
-            $sedeId = $sedeObj->id;
-            $sedeName = $sedeObj->name;
-        }
-
-        if (!$sedeId) {
-            $nextId = \App\Models\Sede::max('id') + 1;
-            $code = 'SEDE-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
-            $sedeObj = \App\Models\Sede::create([
-                'code' => $code,
-                'name' => $request->name,
-            ]);
             $sedeId = $sedeObj->id;
             $sedeName = $sedeObj->name;
         }
@@ -121,7 +108,7 @@ class UserController extends Controller
         $sedeId = null;
         $sedeName = null;
 
-        if ($request->filled('sede_id')) {
+        if ($request->filled('sede_id') && $request->sede_id !== 'none') {
             $sedeObj = \App\Models\Sede::find($request->sede_id);
             if ($sedeObj) {
                 $sedeId = $sedeObj->id;
