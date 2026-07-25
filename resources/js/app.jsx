@@ -4,9 +4,14 @@ import { createIcons, icons } from 'lucide';
 import AttendanceChart from './components/AttendanceChart';
 import DeviceStatusWidget from './components/DeviceStatusWidget';
 
-// Hacer que lucide y createIcons estén disponibles globalmente de forma segura
 window.lucide = {
-    createIcons: (options = {}) => createIcons({ icons, ...options }),
+    createIcons: (options) => {
+        const opts = options || {};
+        if (!opts.icons || Object.keys(opts.icons).length === 0) {
+            opts.icons = icons;
+        }
+        return createIcons(opts);
+    },
     icons
 };
 

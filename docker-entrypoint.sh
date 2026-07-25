@@ -19,6 +19,10 @@ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /
 echo "🔗 Creando enlaces de almacenamiento..."
 php artisan storage:link || true
 
+# Publicar assets de Livewire
+echo "🎨 Publicando assets de Livewire..."
+php artisan livewire:publish --assets || true
+
 # Ejecutar migraciones automáticas
 echo "🗄️ Ejecutando migraciones de base de datos..."
 php artisan migrate --force
