@@ -40,30 +40,32 @@
             <table class="w-full text-sm text-left text-slate-800">
                 <thead class="text-xs uppercase bg-slate-100 text-slate-700 border-b border-slate-200 font-extrabold tracking-wider">
                     <tr>
-                        <th scope="col" class="px-6 py-4">ID Biométrico</th>
-                        <th scope="col" class="px-6 py-4">Empleado</th>
-                        <th scope="col" class="px-6 py-4">Departamento / Cargo</th>
-                        <th scope="col" class="px-6 py-4 text-center">Estado</th>
-                        <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                        <th scope="col" class="px-6 py-4.5">ID Biométrico</th>
+                        <th scope="col" class="px-6 py-4.5">Empleado</th>
+                        <th scope="col" class="px-6 py-4.5">Departamento / Cargo</th>
+                        <th scope="col" class="px-6 py-4.5 text-center">Estado</th>
+                        <th scope="col" class="px-6 py-4.5 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($employees as $employee)
                         <tr class="bg-white hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-0">
                             <!-- ID BIOMÉTRICO -->
-                            <td class="px-6 py-4.5 font-mono text-xs">
-                                <span class="text-slate-400 font-medium">#</span><span class="text-slate-900 font-black text-sm">{{ $employee->employee_no }}</span>
+                            <td class="px-6 py-5 font-mono text-xs whitespace-nowrap">
+                                <span class="bg-slate-100 text-slate-900 font-black text-xs px-3 py-1.5 rounded-xl border border-slate-200 inline-flex items-center">
+                                    <span class="text-slate-400 font-medium mr-0.5">#</span>{{ $employee->employee_no }}
+                                </span>
                             </td>
 
                             <!-- EMPLEADO -->
-                            <td class="px-6 py-4.5">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-900 to-slate-800 font-extrabold text-white text-[13px] flex items-center justify-center shadow-sm border border-slate-700/10">
+                            <td class="px-6 py-5">
+                                <div class="flex items-center space-x-3.5">
+                                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-800 font-extrabold text-white text-xs flex items-center justify-center shadow-sm border border-slate-700/10 shrink-0">
                                         {{ strtoupper(substr($employee->name, 0, 2)) }}
                                     </div>
-                                    <div>
-                                        <p class="font-bold text-slate-900 leading-tight tracking-tight">{{ $employee->name }}</p>
-                                        <p class="text-xs text-slate-400 mt-0.5 font-semibold flex items-center">
+                                    <div class="space-y-1">
+                                        <p class="font-extrabold text-slate-900 text-sm leading-snug tracking-tight">{{ $employee->name }}</p>
+                                        <p class="text-xs text-slate-500 font-semibold flex items-center">
                                             <i data-lucide="contact" class="w-3.5 h-3.5 mr-1 text-slate-400"></i>
                                             Doc: {{ $employee->document_id ?? 'Sin documento' }}
                                         </p>
@@ -72,45 +74,45 @@
                             </td>
 
                             <!-- DEPARTAMENTO / CARGO -->
-                            <td class="px-6 py-4.5">
-                                <div class="space-y-0.5">
+                            <td class="px-6 py-5">
+                                <div class="space-y-1">
                                     <p class="text-slate-900 font-extrabold text-xs flex items-center">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-900 mr-1.5"></span>
+                                        <span class="w-2 h-2 rounded-full bg-black mr-2 shrink-0"></span>
                                         {{ $employee->department->name ?? 'General' }}
                                     </p>
-                                    <p class="text-[11px] text-slate-400 font-bold ml-3">{{ $employee->position ?? 'Sin cargo' }}</p>
+                                    <p class="text-[11px] text-slate-500 font-bold ml-4">{{ $employee->position ?? 'Sin cargo' }}</p>
                                 </div>
                             </td>
 
                             <!-- ESTADO ACTIVO -->
-                            <td class="px-6 py-4.5 text-center">
+                            <td class="px-6 py-5 text-center whitespace-nowrap">
                                 @if($employee->is_active)
-                                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-black px-3 py-1.5 rounded-full inline-flex items-center shadow-sm tracking-wide">
-                                        <span class="relative flex h-2 w-2 mr-1.5">
+                                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black px-3.5 py-1.5 rounded-full inline-flex items-center shadow-xs tracking-wide">
+                                        <span class="relative flex h-2 w-2 mr-2">
                                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                           <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                         </span>
                                         Activo
                                     </span>
                                 @else
-                                    <span class="bg-slate-100 text-slate-400 border border-slate-200 text-[11px] font-bold px-3 py-1.5 rounded-full inline-flex items-center">
+                                    <span class="bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold px-3.5 py-1.5 rounded-full inline-flex items-center">
                                         Inactivo
                                     </span>
                                 @endif
                             </td>
 
                             <!-- ACCIONES -->
-                            <td class="px-6 py-4.5 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
+                            <td class="px-6 py-5 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-2">
                                     <!-- Ver Ficha -->
-                                    <a href="{{ route('employees.show', $employee) }}" class="inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white hover:bg-slate-100 hover:text-slate-900 border border-slate-200 font-extrabold text-[11px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm" title="Ver perfil del empleado">
-                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                    <a href="{{ route('employees.show', $employee) }}" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white hover:bg-slate-100 hover:text-slate-900 border border-slate-300 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs" title="Ver perfil del empleado">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-700"></i>
                                         <span>Ver</span>
                                     </a>
 
                                     <!-- Editar Datos -->
-                                    <a href="{{ route('employees.edit', $employee) }}" class="inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white hover:bg-slate-100 hover:text-slate-900 border border-slate-200 font-extrabold text-[11px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm">
-                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    <a href="{{ route('employees.edit', $employee) }}" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white hover:bg-slate-100 hover:text-slate-900 border border-slate-300 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-700"></i>
                                         <span>Editar</span>
                                     </a>
 
@@ -118,8 +120,8 @@
                                     <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('¿Eliminar al empleado {{ $employee->name }}?')" class="inline-block">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center justify-center gap-1.5 text-red-600 bg-white hover:bg-red-50 hover:text-red-700 border border-red-200 font-extrabold text-[11px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm">
-                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        <button type="submit" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-red-600 bg-white hover:bg-red-50 hover:text-red-700 border border-red-200 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-600"></i>
                                             <span>Borrar</span>
                                         </button>
                                     </form>
