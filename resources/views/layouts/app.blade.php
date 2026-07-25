@@ -265,9 +265,7 @@
             <!-- Brand Header -->
             <div class="h-20 px-6 border-b border-slate-200 flex items-center justify-between overflow-hidden flex-shrink-0">
                 <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-3 flex-shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white shadow-md flex-shrink-0">
-                        <i data-lucide="shield-check" class="w-6 h-6"></i>
-                    </div>
+                    <img src="{{ asset('favicon.png') }}" alt="IntalnetAcces Logo" class="w-10 h-10 rounded-xl object-cover shadow-xs border border-slate-200 flex-shrink-0">
                     <div class="sidebar-text leading-tight">
                         <span class="font-heading font-extrabold text-base text-slate-900 tracking-tight block">IntalnetAcces</span>
                     </div>
