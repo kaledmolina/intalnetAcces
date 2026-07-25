@@ -350,7 +350,7 @@
                         #${emp.employee_no}
                     </td>
                     <td class="px-6 py-3.5 text-xs text-slate-600 font-semibold">
-                        ${emp.department || 'Sin departamento'}
+                        ${emp.department ? emp.department.name : 'Sin departamento'}
                     </td>
                     <td class="px-6 py-3.5 whitespace-nowrap">
                         ${stateBadgeGenerator(emp)}

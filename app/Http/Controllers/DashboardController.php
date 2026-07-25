@@ -73,7 +73,7 @@ class DashboardController extends Controller
         }
 
         // Lista de empleados paginada con su estado de hoy
-        $employeesPaginated = Employee::where('is_active', true)->paginate(10);
+        $employeesPaginated = Employee::with('department')->where('is_active', true)->paginate(10);
 
         $paginatedIds = $employeesPaginated->pluck('id');
         $todayPunchesPaginated = AttendanceRecord::whereDate('event_time', $today)
@@ -91,14 +91,14 @@ class DashboardController extends Controller
         });
 
         // Colecciones de empleados detalladas para interactividad en el Dashboard
-        $totalEmployeesList = Employee::where('is_active', true)->get();
+        $totalEmployeesList = Employee::with('department')->where('is_active', true)->get();
 
         $todayPunches = AttendanceRecord::whereDate('event_time', $today)
             ->orderBy('event_time', 'asc')
             ->get()
             ->groupBy('employee_id');
 
-        $presentEmployeesList = Employee::whereIn('id', $todayRecordEmpIds)->get()->map(function ($emp) use ($todayPunches) {
+        $presentEmployeesList = Employee::with('department')->whereIn('id', $todayRecordEmpIds)->get()->map(function ($emp) use ($todayPunches) {
             $punch = $todayPunches->get($emp->id)?->first();
             $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
             $emp->today_is_late = $punch ? $punch->is_late : false;
@@ -111,7 +111,7 @@ class DashboardController extends Controller
             ->pluck('employee_id')
             ->unique()
             ->filter();
-        $lateEmployeesList = Employee::whereIn('id', $lateEmpIds)->get()->map(function ($emp) use ($todayPunches) {
+        $lateEmployeesList = Employee::with('department')->whereIn('id', $lateEmpIds)->get()->map(function ($emp) use ($todayPunches) {
             $punch = $todayPunches->get($emp->id)?->first();
             $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
             $emp->today_is_late = true;
@@ -119,7 +119,7 @@ class DashboardController extends Controller
             return $emp;
         });
 
-        $absentEmployeesList = Employee::where('is_active', true)
+        $absentEmployeesList = Employee::with('department')->where('is_active', true)
             ->whereNotIn('id', $todayRecordEmpIds)
             ->get();
 
