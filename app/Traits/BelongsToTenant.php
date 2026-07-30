@@ -26,6 +26,16 @@ trait BelongsToTenant
                 } else {
                     $builder->where($builder->getModel()->getTable() . '.user_id', $user->id);
                 }
+                // Si el usuario tiene un departamento asignado, restringir aún más
+                if (!empty($user->department_id)) {
+                    if (class_basename($builder->getModel()) === 'Employee') {
+                        $builder->where($builder->getModel()->getTable() . '.department_id', $user->department_id);
+                    } elseif (class_basename($builder->getModel()) === 'AttendanceRecord') {
+                        $builder->whereHas('employee', function ($q) use ($user) {
+                            $q->where('department_id', $user->department_id);
+                        });
+                    }
+                }
             }
         });
 

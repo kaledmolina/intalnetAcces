@@ -30,7 +30,8 @@ class UserController extends Controller
 
         $allSedes = \App\Models\Sede::orderBy('name', 'asc')->get();
         $allUsers = User::orderBy('name', 'asc')->get();
-        return view('users.index', compact('users', 'allSedes', 'allUsers'));
+        $allDepartments = \App\Models\Department::with('tenant')->orderBy('name', 'asc')->get();
+        return view('users.index', compact('users', 'allSedes', 'allUsers', 'allDepartments'));
     }
 
     /**
@@ -75,11 +76,14 @@ class UserController extends Controller
             $sedeName = $sedeObj->name;
         }
 
+        $departmentId = ($request->filled('department_id') && $request->department_id !== 'none') ? $request->department_id : null;
+
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'sede_id' => $sedeId,
             'sede' => $sedeName,
+            'department_id' => $departmentId,
             'password' => Hash::make($request->password),
             'is_superadmin' => $request->has('is_superadmin'),
             'is_active' => $request->has('is_active'),
@@ -129,11 +133,14 @@ class UserController extends Controller
             $sedeName = $sedeObj->name;
         }
 
+        $departmentId = ($request->filled('department_id') && $request->department_id !== 'none') ? $request->department_id : null;
+
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'sede_id' => $sedeId,
             'sede' => $sedeName,
+            'department_id' => $departmentId,
         ];
 
         // Solo cambiar la contraseña si se ingresó una nueva

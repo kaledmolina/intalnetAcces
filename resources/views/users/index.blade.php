@@ -505,6 +505,16 @@
                 </div>
 
                 <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Departamento (Opcional - Restringir vista)</label>
+                    <select name="department_id" id="userDepartmentIdInput" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-bold rounded-xl focus:ring-black focus:border-black block w-full p-2.5">
+                        <option value="none">🌐 Todos los departamentos de la sede (Sin restricción)</option>
+                        @foreach($allDepartments as $d)
+                            <option value="{{ $d->id }}">🏢 {{ $d->name }} (Tenant: {{ $d->tenant->name ?? 'N/A' }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
                     <label id="passwordLabel" class="block text-[10px] font-black uppercase text-slate-700 mb-1">Contraseña *</label>
                     <input type="password" name="password" id="userPasswordInput" placeholder="Mínimo 6 caracteres" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-black focus:border-black block w-full p-2.5 font-medium">
                 </div>
@@ -624,6 +634,7 @@
         document.getElementById('userEmailInput').value = '';
         document.getElementById('userSedeIdInput').value = '';
         document.getElementById('userSedeInput').value = '';
+        document.getElementById('userDepartmentIdInput').value = 'none';
         document.getElementById('userPasswordInput').value = '';
         document.getElementById('userConfirmInput').value = '';
         document.getElementById('userPasswordInput').required = true;
@@ -646,6 +657,7 @@
         document.getElementById('userEmailInput').value = user.email;
         document.getElementById('userSedeIdInput').value = user.sede_id ? user.sede_id : (user.sede ? '' : 'none');
         document.getElementById('userSedeInput').value = user.sede_id ? '' : (user.sede || '');
+        document.getElementById('userDepartmentIdInput').value = user.department_id ? user.department_id : 'none';
         document.getElementById('userPasswordInput').value = '';
         document.getElementById('userConfirmInput').value = '';
         document.getElementById('userPasswordInput').required = false;
