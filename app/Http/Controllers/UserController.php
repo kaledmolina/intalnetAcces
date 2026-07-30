@@ -76,14 +76,18 @@ class UserController extends Controller
             $sedeName = $sedeObj->name;
         }
 
-        $departmentId = ($request->filled('department_id') && $request->department_id !== 'none') ? $request->department_id : null;
+        $assignedDepartments = $request->input('department_ids', []);
+        // Si viene el valor 'none' en el array (aunque con checkboxes no debería, pero por si acaso), lo limpiamos
+        if (in_array('none', $assignedDepartments)) {
+            $assignedDepartments = [];
+        }
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'sede_id' => $sedeId,
             'sede' => $sedeName,
-            'department_id' => $departmentId,
+            'assigned_departments' => $assignedDepartments,
             'password' => Hash::make($request->password),
             'is_superadmin' => $request->has('is_superadmin'),
             'is_active' => $request->has('is_active'),
@@ -133,14 +137,17 @@ class UserController extends Controller
             $sedeName = $sedeObj->name;
         }
 
-        $departmentId = ($request->filled('department_id') && $request->department_id !== 'none') ? $request->department_id : null;
+        $assignedDepartments = $request->input('department_ids', []);
+        if (in_array('none', $assignedDepartments)) {
+            $assignedDepartments = [];
+        }
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'sede_id' => $sedeId,
             'sede' => $sedeName,
-            'department_id' => $departmentId,
+            'assigned_departments' => $assignedDepartments,
         ];
 
         // Solo cambiar la contraseña si se ingresó una nueva

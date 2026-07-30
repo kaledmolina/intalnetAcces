@@ -505,13 +505,20 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Departamento (Opcional - Restringir vista)</label>
-                    <select name="department_id" id="userDepartmentIdInput" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs font-bold rounded-xl focus:ring-black focus:border-black block w-full p-2.5">
-                        <option value="none">🌐 Todos los departamentos de la sede (Sin restricción)</option>
+                    <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Departamentos (Opcional - Restringir vista)</label>
+                    <div class="max-h-36 overflow-y-auto bg-slate-50 border border-slate-300 rounded-xl p-3 space-y-2">
+                        <label class="flex items-center space-x-2 text-xs text-slate-800 font-extrabold cursor-pointer">
+                            <input type="checkbox" name="department_ids[]" value="none" id="noDeptRestrictionCheckbox" class="rounded text-black focus:ring-black w-4 h-4">
+                            <span>🌐 Todos los departamentos (Sin restricción)</span>
+                        </label>
+                        <hr class="border-slate-200">
                         @foreach($allDepartments as $d)
-                            <option value="{{ $d->id }}">🏢 {{ $d->name }} (Tenant: {{ $d->tenant->name ?? 'N/A' }})</option>
+                            <label class="flex items-center space-x-2 text-xs text-slate-700 font-bold cursor-pointer hover:bg-slate-100 p-1 rounded">
+                                <input type="checkbox" name="department_ids[]" value="{{ $d->id }}" class="rounded text-black focus:ring-black w-4 h-4 dept-checkbox">
+                                <span>🏢 {{ $d->name }} <span class="text-slate-400 text-[10px] ml-1">(Sede: {{ $d->tenant->sede ?? 'N/A' }})</span></span>
+                            </label>
                         @endforeach
-                    </select>
+                    </div>
                 </div>
 
                 <div>
@@ -634,7 +641,8 @@
         document.getElementById('userEmailInput').value = '';
         document.getElementById('userSedeIdInput').value = '';
         document.getElementById('userSedeInput').value = '';
-        document.getElementById('userDepartmentIdInput').value = 'none';
+        document.getElementById('noDeptRestrictionCheckbox').checked = true;
+        document.querySelectorAll('.dept-checkbox').forEach(cb => cb.checked = false);
         document.getElementById('userPasswordInput').value = '';
         document.getElementById('userConfirmInput').value = '';
         document.getElementById('userPasswordInput').required = true;
@@ -657,7 +665,19 @@
         document.getElementById('userEmailInput').value = user.email;
         document.getElementById('userSedeIdInput').value = user.sede_id ? user.sede_id : (user.sede ? '' : 'none');
         document.getElementById('userSedeInput').value = user.sede_id ? '' : (user.sede || '');
-        document.getElementById('userDepartmentIdInput').value = user.department_id ? user.department_id : 'none';
+        
+        document.getElementById('noDeptRestrictionCheckbox').checked = false;
+        document.querySelectorAll('.dept-checkbox').forEach(cb => cb.checked = false);
+        
+        let assignedDepts = user.assigned_departments || [];
+        if (assignedDepts.length === 0) {
+            document.getElementById('noDeptRestrictionCheckbox').checked = true;
+        } else {
+            assignedDepts.forEach(deptId => {
+                let cb = document.querySelector(`.dept-checkbox[value="${deptId}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
         document.getElementById('userPasswordInput').value = '';
         document.getElementById('userConfirmInput').value = '';
         document.getElementById('userPasswordInput').required = false;
@@ -677,6 +697,30 @@
 
         if (window.lucide) lucide.createIcons();
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const noDeptCb = document.getElementById('noDeptRestrictionCheckbox');
+        const deptCbs = document.querySelectorAll('.dept-checkbox');
+
+        noDeptCb.addEventListener('change', function() {
+            if (this.checked) {
+                deptCbs.forEach(cb => cb.checked = false);
+            }
+        });
+
+        deptCbs.forEach(cb => {
+            cb.addEventListener('change', function() {
+                if (this.checked) {
+                    noDeptCb.checked = false;
+                } else {
+                    let anyChecked = Array.from(deptCbs).some(c => c.checked);
+                    if (!anyChecked) {
+                        noDeptCb.checked = true;
+                    }
+                }
+            });
+        });
+    });
 </script>
 @endpush
 @endsection
