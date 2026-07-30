@@ -186,6 +186,8 @@ class EmployeeController extends Controller
             ->orderBy('event_date', 'desc')
             ->paginate(15, ['*'], 'hours_page');
 
+        $currentSchedule = $employee->currentSchedule();
+
         foreach ($dailyHours as $row) {
             $punches = $employee->attendanceRecords()
                 ->whereDate('event_time', $row->event_date)
@@ -286,7 +288,6 @@ class EmployeeController extends Controller
             $row->notes = $notes;
         }
 
-        $currentSchedule = $employee->currentSchedule();
         $schedules = Schedule::all();
 
         return view('employees.show', compact('employee', 'attendanceRecords', 'dailyHours', 'currentSchedule', 'schedules'));
