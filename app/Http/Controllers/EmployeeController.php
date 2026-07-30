@@ -253,9 +253,20 @@ class EmployeeController extends Controller
                             } else {
                                 // Menos de 4 huellas. Verificar si marcó la salida al final del día.
                                 if ($lastPunch->lt($schExit->copy()->subHours(1))) {
-                                    // Salió mucho antes de la hora de salida (probablemente a almorzar y no volvió)
-                                    $totalWorkedMinutes = 0;
+                                    // Salió mucho antes de la hora de salida (probablemente a almorzar y no volvió o salió temprano)
                                     $notes[] = "⚠️ Marcación incompleta (Falta retorno/salida final)";
+                                    
+                                    $worked = $diffMinutes;
+                                    if ($lastPunch->gt($schLunchStart)) {
+                                        if ($lastPunch->lt($schLunchEnd)) {
+                                            // Salió durante el almuerzo
+                                            $worked -= $schLunchStart->diffInMinutes($lastPunch);
+                                        } else {
+                                            // Salió después del almuerzo
+                                            $worked -= $scheduledLunchMinutes;
+                                        }
+                                    }
+                                    $totalWorkedMinutes = max(0, $worked);
                                 } else {
                                     // Salió al final del día pero no reportó almuerzo. Descontamos el tiempo programado.
                                     $totalWorkedMinutes = $diffMinutes - $scheduledLunchMinutes;
