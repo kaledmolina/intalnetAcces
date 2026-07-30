@@ -187,28 +187,103 @@ class EmployeeController extends Controller
             ->paginate(15, ['*'], 'hours_page');
 
         foreach ($dailyHours as $row) {
-            $checkIn = $row->explicit_check_in ? \Carbon\Carbon::parse($row->explicit_check_in) : \Carbon\Carbon::parse($row->fallback_check_in);
-            $checkOut = $row->explicit_check_out ? \Carbon\Carbon::parse($row->explicit_check_out) : \Carbon\Carbon::parse($row->fallback_check_out);
-            
-            $row->check_in_time = $checkIn->format('h:i A');
-            $diffMinutes = $checkIn->diffInMinutes($checkOut);
-            
-            $hasExplicitCheckOut = !empty($row->explicit_check_out);
-            $hasMultiplePunches = $row->punch_count > 1;
-            
-            // Si el usuario marcó la salida explícitamente en el dispositivo, la respetamos.
-            // Si no lo hizo pero tiene múltiples marcas de más de 30 minutos, la asignamos como salida automática.
-            if ($hasExplicitCheckOut || ($hasMultiplePunches && $diffMinutes >= 30 && $row->fallback_check_out !== $row->fallback_check_in)) {
-                $row->check_out_time = $checkOut->format('h:i A');
-                $hours = floor($diffMinutes / 60);
-                $minutes = $diffMinutes % 60;
-                $row->hours_worked_text = "{$hours}h {$minutes}m";
-                $row->hours_worked_decimal = number_format($diffMinutes / 60, 2);
+            $punches = $employee->attendanceRecords()
+                ->whereDate('event_time', $row->event_date)
+                ->orderBy('event_time')
+                ->get();
+
+            $dayOfWeek = \Carbon\Carbon::parse($row->event_date)->dayOfWeekIso;
+            $dayConfig = clone $currentSchedule ? clone $currentSchedule->days->where('day_of_week', $dayOfWeek)->first() : null;
+
+            $totalWorkedMinutes = 0;
+            $extraMinutes = 0;
+            $notes = [];
+
+            if ($punches->count() >= 2) {
+                $firstPunch = clone $punches->first()->event_time;
+                $lastPunch = clone $punches->last()->event_time;
+
+                $row->check_in_time = $firstPunch->format('h:i A');
+                
+                // Si la diferencia es menor a 30 mins y no marcó explicitamente checkout, no lo contamos como salida válida (evita doble marcación rápida)
+                $diffMinutes = $firstPunch->diffInMinutes($lastPunch);
+                $hasExplicitCheckOut = !empty($row->explicit_check_out);
+                
+                if ($hasExplicitCheckOut || $diffMinutes >= 30) {
+                    $row->check_out_time = $lastPunch->format('h:i A');
+
+                    if ($dayConfig && $dayConfig->is_working_day) {
+                        $schEntry = \Carbon\Carbon::parse($row->event_date . ' ' . $dayConfig->entry_time);
+                        $schExit = \Carbon\Carbon::parse($row->event_date . ' ' . $dayConfig->exit_time);
+
+                        // Horas Extras (Llegada temprana)
+                        if ($firstPunch->lt($schEntry)) {
+                            $extraMinutes += $firstPunch->diffInMinutes($schEntry);
+                        }
+                        // Horas Extras (Salida tardía)
+                        if ($lastPunch->gt($schExit)) {
+                            $extraMinutes += $schExit->diffInMinutes($lastPunch);
+                        }
+
+                        if ($dayConfig->break_start_time && $dayConfig->break_end_time) {
+                            $schLunchStart = \Carbon\Carbon::parse($row->event_date . ' ' . $dayConfig->break_start_time);
+                            $schLunchEnd = \Carbon\Carbon::parse($row->event_date . ' ' . $dayConfig->break_end_time);
+                            $scheduledLunchMinutes = $schLunchStart->diffInMinutes($schLunchEnd);
+
+                            if ($punches->count() >= 4) {
+                                // Tiene 4 marcaciones o más, tomamos la 2da como salida de almuerzo y la penúltima como regreso
+                                // O más preciso, la primera como entrada, la última como salida y las intermedias para almuerzo.
+                                $lunchOut = clone $punches[1]->event_time;
+                                $lunchIn = clone $punches[$punches->count() - 2]->event_time;
+
+                                $morningMinutes = $firstPunch->diffInMinutes($lunchOut);
+                                $afternoonMinutes = $lunchIn->diffInMinutes($lastPunch);
+
+                                $totalWorkedMinutes = $morningMinutes + $afternoonMinutes;
+                            } else {
+                                // Menos de 4 huellas, no reportó almuerzo. Descontamos el tiempo programado.
+                                $totalWorkedMinutes = $diffMinutes - $scheduledLunchMinutes;
+                                if ($totalWorkedMinutes < 0) $totalWorkedMinutes = 0;
+                                $notes[] = "⚠️ Hora de almuerzo no reportada en el huellero";
+                            }
+                        } else {
+                            $totalWorkedMinutes = $diffMinutes;
+                        }
+                    } else {
+                        // Día no laborable, todo el tiempo es extra
+                        $totalWorkedMinutes = $diffMinutes;
+                        $extraMinutes = $diffMinutes;
+                        $notes[] = "⚠️ Día no laborable según horario";
+                    }
+                } else {
+                    $row->check_out_time = 'Falta Salida';
+                    $totalWorkedMinutes = 0;
+                }
             } else {
+                $row->check_in_time = $punches->first() ? $punches->first()->event_time->format('h:i A') : 'Sin Entrada';
                 $row->check_out_time = 'Falta Salida';
+                $totalWorkedMinutes = 0;
+            }
+
+            if ($totalWorkedMinutes > 0) {
+                $hours = floor($totalWorkedMinutes / 60);
+                $minutes = $totalWorkedMinutes % 60;
+                $row->hours_worked_text = "{$hours}h {$minutes}m";
+                $row->hours_worked_decimal = number_format($totalWorkedMinutes / 60, 2);
+            } else {
                 $row->hours_worked_text = '—';
                 $row->hours_worked_decimal = '0.00';
             }
+
+            if ($extraMinutes > 0) {
+                $eHours = floor($extraMinutes / 60);
+                $eMins = $extraMinutes % 60;
+                $row->extra_hours_text = "{$eHours}h {$eMins}m";
+            } else {
+                $row->extra_hours_text = null;
+            }
+
+            $row->notes = $notes;
         }
 
         $currentSchedule = $employee->currentSchedule();

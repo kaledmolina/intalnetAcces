@@ -141,11 +141,27 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 text-right text-xs font-black text-slate-900">
-                                            @if($row->hours_worked_text !== '—')
-                                                <span class="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">{{ $row->hours_worked_text }}</span>
-                                            @else
-                                                <span class="text-slate-400 font-medium">—</span>
-                                            @endif
+                                            <div class="flex flex-col items-end space-y-1">
+                                                @if($row->hours_worked_text !== '—')
+                                                    <span class="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">{{ $row->hours_worked_text }}</span>
+                                                @else
+                                                    <span class="text-slate-400 font-medium">—</span>
+                                                @endif
+                                                
+                                                @if($row->extra_hours_text)
+                                                    <span class="text-[10px] text-green-700 font-bold bg-green-50 px-2 rounded-md border border-green-200">
+                                                        + Extras: {{ $row->extra_hours_text }}
+                                                    </span>
+                                                @endif
+
+                                                @if(count($row->notes) > 0)
+                                                    @foreach($row->notes as $note)
+                                                        <span class="text-[9px] text-amber-600 font-bold italic block mt-1">
+                                                            {{ $note }}
+                                                        </span>
+                                                    @endforeach
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
