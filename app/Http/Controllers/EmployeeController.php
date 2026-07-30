@@ -166,14 +166,23 @@ class EmployeeController extends Controller
         );
     }
 
-    public function show(Employee $employee)
+    public function show(Request $request, Employee $employee)
     {
-        $attendanceRecords = $employee->attendanceRecords()
+        $attendanceQuery = $employee->attendanceRecords();
+        $dailyHoursQuery = $employee->attendanceRecords();
+
+        if ($request->filled('date')) {
+            $filterDate = $request->input('date');
+            $attendanceQuery->whereDate('event_time', $filterDate);
+            $dailyHoursQuery->whereDate('event_time', $filterDate);
+        }
+
+        $attendanceRecords = $attendanceQuery
             ->with('device')
             ->latest('event_time')
             ->paginate(20, ['*'], 'punches_page');
 
-        $dailyHours = $employee->attendanceRecords()
+        $dailyHours = $dailyHoursQuery
             ->selectRaw("
                 DATE(event_time) as event_date,
                 MIN(CASE WHEN attendance_type = 'check_in' THEN event_time ELSE NULL END) as explicit_check_in,

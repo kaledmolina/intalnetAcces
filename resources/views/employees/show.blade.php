@@ -112,6 +112,22 @@
                     </div>
                 </div>
 
+                <!-- Filtros Globales de Fecha para el Historial -->
+                <div class="px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filtro de Historial</span>
+                    <form method="GET" action="{{ route('employees.show', $employee) }}" class="flex items-center space-x-2">
+                        <input type="date" name="date" value="{{ request('date') }}" class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block px-2.5 py-1.5 font-medium">
+                        <button type="submit" class="bg-black hover:bg-slate-800 text-white font-bold rounded-lg text-xs px-3 py-1.5 transition-colors">
+                            Filtrar
+                        </button>
+                        @if(request()->filled('date'))
+                            <a href="{{ route('employees.show', $employee) }}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs px-3 py-1.5 transition-colors">
+                                Limpiar
+                            </a>
+                        @endif
+                    </form>
+                </div>
+
                 <!-- Contenido Pestaña 1: Horas Trabajadas -->
                 <div id="tab-content-hours" class="p-0">
                     <div class="overflow-x-auto">

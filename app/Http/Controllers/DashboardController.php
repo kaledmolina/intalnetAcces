@@ -11,9 +11,10 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $today = Carbon::today();
+        $targetDate = $request->input('date') ? Carbon::parse($request->input('date')) : Carbon::today();
+        $today = $targetDate;
 
         $totalEmployees = Employee::where('is_active', true)->count();
 
@@ -124,6 +125,7 @@ class DashboardController extends Controller
             ->get();
 
         return view('dashboard', compact(
+            'targetDate',
             'totalEmployees',
             'presentCount',
             'absentCount',

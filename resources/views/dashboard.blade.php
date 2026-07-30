@@ -6,6 +6,19 @@
 
 @section('content')
 <div class="space-y-6">
+    <!-- Filtro de Fecha del Dashboard -->
+    <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <h3 class="font-heading text-sm font-extrabold text-slate-900">Fecha de Consulta</h3>
+            <p class="text-[11px] text-slate-500 font-semibold">Mostrando datos para el {{ $targetDate->format('d/m/Y') }}</p>
+        </div>
+        <form method="GET" action="{{ route('dashboard') }}" class="flex items-center space-x-2">
+            <input type="date" name="date" value="{{ $targetDate->format('Y-m-d') }}" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-black focus:border-black block px-3 py-2 font-semibold">
+            <button type="submit" class="bg-black hover:bg-slate-800 text-white font-bold rounded-lg text-sm px-4 py-2 transition-colors">
+                Buscar
+            </button>
+        </form>
+    </div>
 
     <!-- Black & White High Contrast KPI Cards Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -90,9 +103,12 @@
                 </h3>
                 <p id="kpi-details-subtitle" class="text-[11px] text-slate-500 font-semibold mt-0.5">Mostrando personal según la tarjeta seleccionada</p>
             </div>
-            <button onclick="closeKpiDetails()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
+            <div class="flex items-center space-x-4">
+                <input type="text" id="kpi-search-input" onkeyup="filterKpiDetails()" placeholder="Buscar por nombre..." class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-48 px-2.5 py-1.5 font-medium">
+                <button onclick="closeKpiDetails()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
         </div>
         
         <div class="overflow-x-auto">
@@ -267,6 +283,8 @@
         const titleEl = document.getElementById('kpi-details-title');
         const iconEl = document.getElementById('kpi-details-icon');
         const bodyEl = document.getElementById('kpi-details-body');
+        const searchInput = document.getElementById('kpi-search-input');
+        if (searchInput) searchInput.value = '';
         
         let data = [];
         let title = '';
@@ -386,6 +404,28 @@
         document.querySelectorAll('.kpi-card').forEach(card => {
             card.classList.remove('ring-2', 'ring-black', 'border-black');
         });
+    };
+
+    window.filterKpiDetails = function() {
+        const input = document.getElementById('kpi-search-input');
+        const filter = input.value.toUpperCase();
+        const tbody = document.getElementById('kpi-details-body');
+        const trs = tbody.getElementsByTagName('tr');
+        
+        for (let i = 0; i < trs.length; i++) {
+            const td = trs[i].getElementsByTagName('td')[0];
+            if (td) {
+                const nameP = td.querySelector('p.font-extrabold');
+                if (nameP) {
+                    const txtValue = nameP.textContent || nameP.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        trs[i].style.display = "";
+                    } else {
+                        trs[i].style.display = "none";
+                    }
+                }
+            }
+        }
     };
 }
 </script>
