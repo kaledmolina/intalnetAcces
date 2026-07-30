@@ -257,21 +257,34 @@ class EmployeeController extends Controller
                                     $notes[] = "⚠️ Marcación incompleta (Falta retorno/salida final)";
                                     
                                     $worked = $diffMinutes;
+                                    $subtractedLunch = 0;
                                     if ($lastPunch->gt($schLunchStart)) {
                                         if ($lastPunch->lt($schLunchEnd)) {
                                             // Salió durante el almuerzo
-                                            $worked -= $schLunchStart->diffInMinutes($lastPunch);
+                                            $subtractedLunch = $schLunchStart->diffInMinutes($lastPunch);
+                                            $worked -= $subtractedLunch;
                                         } else {
                                             // Salió después del almuerzo
-                                            $worked -= $scheduledLunchMinutes;
+                                            $subtractedLunch = $scheduledLunchMinutes;
+                                            $worked -= $subtractedLunch;
                                         }
                                     }
                                     $totalWorkedMinutes = max(0, $worked);
+                                    
+                                    if ($subtractedLunch > 0) {
+                                        $sh = floor($subtractedLunch / 60);
+                                        $sm = $subtractedLunch % 60;
+                                        $notes[] = "ℹ️ Almuerzo restado (Incompleto): {$sh}h {$sm}m";
+                                    }
                                 } else {
                                     // Salió al final del día pero no reportó almuerzo. Descontamos el tiempo programado.
                                     $totalWorkedMinutes = $diffMinutes - $scheduledLunchMinutes;
                                     if ($totalWorkedMinutes < 0) $totalWorkedMinutes = 0;
                                     $notes[] = "⚠️ Hora de almuerzo no reportada en el huellero";
+                                    
+                                    $sh = floor($scheduledLunchMinutes / 60);
+                                    $sm = $scheduledLunchMinutes % 60;
+                                    $notes[] = "ℹ️ Almuerzo restado (Automático): {$sh}h {$sm}m";
                                 }
                             }
                         } else {
