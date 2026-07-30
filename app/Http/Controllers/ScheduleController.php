@@ -23,6 +23,7 @@ class ScheduleController extends Controller
             'name' => 'required|string|max:255',
             'tolerance_minutes' => 'required|integer|min:0|max:120',
             'is_default' => 'nullable|boolean',
+            'check_break_tardiness' => 'nullable|boolean',
             'days' => 'required|array|size:7',
         ]);
 
@@ -36,6 +37,7 @@ class ScheduleController extends Controller
             'name' => $validated['name'],
             'tolerance_minutes' => $validated['tolerance_minutes'],
             'is_default' => $isDefault,
+            'check_break_tardiness' => $request->has('check_break_tardiness'),
         ]);
 
         for ($i = 1; $i <= 7; $i++) {
@@ -46,6 +48,8 @@ class ScheduleController extends Controller
                 'day_of_week' => $i,
                 'is_working_day' => $isWorking,
                 'entry_time' => $isWorking ? ($dayData['entry_time'] ?? null) : null,
+                'break_start_time' => $isWorking ? ($dayData['break_start_time'] ?? null) : null,
+                'break_end_time' => $isWorking ? ($dayData['break_end_time'] ?? null) : null,
                 'exit_time' => $isWorking ? ($dayData['exit_time'] ?? null) : null,
             ]);
         }
@@ -59,6 +63,7 @@ class ScheduleController extends Controller
             'name' => 'required|string|max:255',
             'tolerance_minutes' => 'required|integer|min:0|max:120',
             'is_default' => 'nullable|boolean',
+            'check_break_tardiness' => 'nullable|boolean',
             'days' => 'required|array|size:7',
         ]);
 
@@ -72,6 +77,7 @@ class ScheduleController extends Controller
             'name' => $validated['name'],
             'tolerance_minutes' => $validated['tolerance_minutes'],
             'is_default' => $isDefault,
+            'check_break_tardiness' => $request->has('check_break_tardiness'),
         ]);
 
         for ($i = 1; $i <= 7; $i++) {
@@ -83,6 +89,8 @@ class ScheduleController extends Controller
                 [
                     'is_working_day' => $isWorking,
                     'entry_time' => $isWorking ? ($dayData['entry_time'] ?? null) : null,
+                    'break_start_time' => $isWorking ? ($dayData['break_start_time'] ?? null) : null,
+                    'break_end_time' => $isWorking ? ($dayData['break_end_time'] ?? null) : null,
                     'exit_time' => $isWorking ? ($dayData['exit_time'] ?? null) : null,
                 ]
             );

@@ -411,17 +411,44 @@ class HikvisionService
                         $lateMinutes = 0;
 
                         if ($schedule) {
-                            // Obtener configuración para el día de la semana (1 = Lunes, 7 = Domingo)
                             $dayConfig = $schedule->days()->where('day_of_week', $eventTime->dayOfWeekIso)->first();
 
-                            if ($dayConfig && $dayConfig->is_working_day && $dayConfig->entry_time) {
-                                $entryTime = Carbon::parse($eventTime->toDateString() . ' ' . $dayConfig->entry_time);
-                                $toleranceDeadline = (clone $entryTime)->addMinutes($schedule->tolerance_minutes);
+                            if ($dayConfig && $dayConfig->is_working_day) {
+                                $expectedTimes = [];
+                                $baseDate = $eventTime->toDateString();
 
-                                // Si marca después de la hora de tolerancia y dentro de un margen razonable (ej. 4 horas después)
-                                if ($eventTime->greaterThan($toleranceDeadline) && $eventTime->diffInHours($entryTime) < 4) {
-                                    $isLate = true;
-                                    $lateMinutes = $eventTime->diffInMinutes($entryTime);
+                                if ($dayConfig->entry_time) {
+                                    $expectedTimes['entry'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->entry_time), 'type' => 'in', 'check_tardiness' => true];
+                                }
+                                if ($dayConfig->break_start_time) {
+                                    $expectedTimes['break_start'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->break_start_time), 'type' => 'out', 'check_tardiness' => false];
+                                }
+                                if ($dayConfig->break_end_time) {
+                                    $expectedTimes['break_end'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->break_end_time), 'type' => 'in', 'check_tardiness' => $schedule->check_break_tardiness];
+                                }
+                                if ($dayConfig->exit_time) {
+                                    $expectedTimes['exit'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->exit_time), 'type' => 'out', 'check_tardiness' => false];
+                                }
+
+                                $closest = null;
+                                $minDiff = PHP_INT_MAX;
+
+                                foreach ($expectedTimes as $key => $data) {
+                                    $diff = abs($eventTime->diffInMinutes($data['time'], false));
+                                    if ($diff < $minDiff) {
+                                        $minDiff = $diff;
+                                        $closest = $data;
+                                    }
+                                }
+
+                                if ($closest && $closest['type'] === 'in' && $closest['check_tardiness']) {
+                                    $toleranceDeadline = (clone $closest['time'])->addMinutes($schedule->tolerance_minutes);
+                                    
+                                    // Si marca después de la tolerancia y dentro de 4 horas
+                                    if ($eventTime->greaterThan($toleranceDeadline) && $eventTime->diffInHours($closest['time']) < 4) {
+                                        $isLate = true;
+                                        $lateMinutes = $eventTime->diffInMinutes($closest['time']);
+                                    }
                                 }
                             }
                         }
@@ -432,6 +459,11 @@ class HikvisionService
                             $attendanceType = 'check_in';
                         } elseif ($rawStatus === 'checkout') {
                             $attendanceType = 'check_out';
+                        }
+                        
+                        // Si el dispositivo envió 'auto', podemos inferirlo del 'closest' para tener mejor data
+                        if ($attendanceType === 'auto' && isset($closest)) {
+                            $attendanceType = $closest['type'] === 'in' ? 'check_in' : 'check_out';
                         }
 
                         $eventId = $event['serialNo'] ?? ($employeeNo . '_' . $eventTime->timestamp);

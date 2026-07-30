@@ -16,6 +16,7 @@ class Schedule extends Model
         'name',
         'tolerance_minutes',
         'is_default',
+        'check_break_tardiness',
     ];
 
     public function days()
@@ -31,6 +32,7 @@ class Schedule extends Model
     protected $casts = [
         'is_default' => 'boolean',
         'tolerance_minutes' => 'integer',
+        'check_break_tardiness' => 'boolean',
     ];
 
     public function employeeSchedules()

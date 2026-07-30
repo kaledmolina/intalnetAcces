@@ -58,6 +58,13 @@
                         <span class="text-slate-600 font-semibold">Tolerancia Global:</span>
                         <span class="font-extrabold text-slate-900 text-sm">{{ $schedule->tolerance_minutes }} min</span>
                     </div>
+                    
+                    @if($schedule->check_break_tardiness)
+                    <div class="flex items-center justify-between p-2.5 mt-2 rounded-xl bg-red-50 border border-red-200">
+                        <span class="text-red-700 font-semibold text-xs">Alarma Tardanza Almuerzo:</span>
+                        <span class="font-extrabold text-red-700 text-xs">ACTIVADA</span>
+                    </div>
+                    @endif
 
                     <div class="space-y-1.5">
                         <span class="text-slate-700 font-extrabold uppercase tracking-wider text-[10px]">Configuración por Días</span>
@@ -66,9 +73,16 @@
                                 @if($day->is_working_day)
                                     <div class="flex items-center justify-between bg-slate-50 border border-slate-100 p-2 rounded-lg">
                                         <span class="font-bold text-slate-700">{{ $diasSemana[$day->day_of_week] }}</span>
-                                        <span class="font-mono text-slate-900 font-extrabold text-xs">
-                                            {{ \Carbon\Carbon::parse($day->entry_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($day->exit_time)->format('H:i') }}
-                                        </span>
+                                        <div class="flex flex-col items-end">
+                                            <span class="font-mono text-slate-900 font-extrabold text-xs">
+                                                {{ \Carbon\Carbon::parse($day->entry_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($day->exit_time)->format('H:i') }}
+                                            </span>
+                                            @if($day->break_start_time && $day->break_end_time)
+                                                <span class="font-mono text-slate-500 font-bold text-[10px]">
+                                                    Almuerzo: {{ \Carbon\Carbon::parse($day->break_start_time)->format('H:i') }} a {{ \Carbon\Carbon::parse($day->break_end_time)->format('H:i') }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 @else
                                     <div class="flex items-center justify-between bg-slate-50 border border-slate-100 p-2 rounded-lg opacity-50">
@@ -179,6 +193,8 @@
                                         $dayConfig = $schedule->days->where('day_of_week', $num)->first();
                                         $isWorking = $dayConfig ? $dayConfig->is_working_day : true;
                                         $entryTime = $dayConfig && $dayConfig->entry_time ? \Carbon\Carbon::parse($dayConfig->entry_time)->format('H:i') : '08:00';
+                                        $breakStartTime = $dayConfig && $dayConfig->break_start_time ? \Carbon\Carbon::parse($dayConfig->break_start_time)->format('H:i') : '';
+                                        $breakEndTime = $dayConfig && $dayConfig->break_end_time ? \Carbon\Carbon::parse($dayConfig->break_end_time)->format('H:i') : '';
                                         $exitTime = $dayConfig && $dayConfig->exit_time ? \Carbon\Carbon::parse($dayConfig->exit_time)->format('H:i') : '17:00';
                                     @endphp
                                     <div class="flex items-center space-x-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">
@@ -190,11 +206,21 @@
                                             </label>
                                         </div>
                                         
-                                        <div class="flex-1 grid grid-cols-2 gap-2 time-inputs-container {{ $isWorking ? '' : 'opacity-30 pointer-events-none' }}">
+                                        <div class="flex-1 grid grid-cols-4 gap-1 time-inputs-container {{ $isWorking ? '' : 'opacity-30 pointer-events-none' }}">
                                             <div>
+                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Entrada</span>
                                                 <input type="time" name="days[{{ $num }}][entry_time]" value="{{ $entryTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
                                             </div>
                                             <div>
+                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Inicio Almuerzo">Salida Al.</span>
+                                                <input type="time" name="days[{{ $num }}][break_start_time]" value="{{ $breakStartTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                            </div>
+                                            <div>
+                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Fin Almuerzo">Reg. Al.</span>
+                                                <input type="time" name="days[{{ $num }}][break_end_time]" value="{{ $breakEndTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                            </div>
+                                            <div>
+                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Salida</span>
                                                 <input type="time" name="days[{{ $num }}][exit_time]" value="{{ $exitTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
                                             </div>
                                         </div>
@@ -202,9 +228,15 @@
                                 @endforeach
                             </div>
 
-                            <div class="flex items-center space-x-2 pt-2">
-                                <input type="checkbox" name="is_default" value="1" id="is_default_edit_{{ $schedule->id }}" class="w-4 h-4 text-black bg-slate-100 border-slate-400 rounded focus:ring-black" {{ $schedule->is_default ? 'checked' : '' }}>
-                                <label for="is_default_edit_{{ $schedule->id }}" class="text-xs font-bold text-slate-900">Establecer como Horario por Defecto</label>
+                            <div class="flex flex-col space-y-2 pt-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" name="is_default" value="1" id="is_default_edit_{{ $schedule->id }}" class="w-4 h-4 text-black bg-slate-100 border-slate-400 rounded focus:ring-black" {{ $schedule->is_default ? 'checked' : '' }}>
+                                    <label for="is_default_edit_{{ $schedule->id }}" class="text-xs font-bold text-slate-900">Establecer como Horario por Defecto</label>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" name="check_break_tardiness" value="1" id="check_break_tardiness_edit_{{ $schedule->id }}" class="w-4 h-4 text-red-600 bg-slate-100 border-slate-400 rounded focus:ring-red-600" {{ $schedule->check_break_tardiness ? 'checked' : '' }}>
+                                    <label for="check_break_tardiness_edit_{{ $schedule->id }}" class="text-xs font-bold text-slate-900">Activar Alarma de Tardanza al Regresar del Almuerzo</label>
+                                </div>
                             </div>
 
                             <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
@@ -259,11 +291,21 @@
                                 </label>
                             </div>
                             
-                            <div class="flex-1 grid grid-cols-2 gap-2 time-inputs-container">
+                            <div class="flex-1 grid grid-cols-4 gap-1 time-inputs-container">
                                 <div>
+                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Entrada</span>
                                     <input type="time" name="days[{{ $num }}][entry_time]" value="08:00" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
                                 </div>
                                 <div>
+                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Inicio Almuerzo">Salida Al.</span>
+                                    <input type="time" name="days[{{ $num }}][break_start_time]" value="" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                </div>
+                                <div>
+                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Fin Almuerzo">Reg. Al.</span>
+                                    <input type="time" name="days[{{ $num }}][break_end_time]" value="" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                </div>
+                                <div>
+                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Salida</span>
                                     <input type="time" name="days[{{ $num }}][exit_time]" value="17:00" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
                                 </div>
                             </div>
@@ -271,9 +313,15 @@
                     @endforeach
                 </div>
 
-                <div class="flex items-center space-x-2 pt-2">
-                    <input type="checkbox" name="is_default" value="1" id="is_default" class="w-4 h-4 text-black bg-slate-100 border-slate-400 rounded focus:ring-black">
-                    <label for="is_default" class="text-xs font-bold text-slate-900">Establecer como Horario por Defecto</label>
+                <div class="flex flex-col space-y-2 pt-2">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" name="is_default" value="1" id="is_default" class="w-4 h-4 text-black bg-slate-100 border-slate-400 rounded focus:ring-black">
+                        <label for="is_default" class="text-xs font-bold text-slate-900">Establecer como Horario por Defecto</label>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" name="check_break_tardiness" value="1" id="check_break_tardiness" class="w-4 h-4 text-red-600 bg-slate-100 border-slate-400 rounded focus:ring-red-600">
+                        <label for="check_break_tardiness" class="text-xs font-bold text-slate-900">Activar Alarma de Tardanza al Regresar del Almuerzo</label>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
