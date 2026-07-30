@@ -103,9 +103,14 @@
                 </h3>
                 <p id="kpi-details-subtitle" class="text-[11px] text-slate-500 font-semibold mt-0.5">Mostrando personal según la tarjeta seleccionada</p>
             </div>
-            <div class="flex items-center space-x-4">
-                <input type="text" id="kpi-search-input" onkeyup="filterKpiDetails()" placeholder="Buscar por nombre..." class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-48 px-2.5 py-1.5 font-medium">
-                <button onclick="closeKpiDetails()" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+                <input type="text" id="kpi-search-input" onkeyup="filterKpiDetails()" placeholder="Filtrar por nombre..." class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-48 px-2.5 py-1.5 font-medium">
+                
+                <form method="GET" action="{{ route('dashboard') }}" class="flex items-center space-x-2">
+                    <input type="date" name="date" value="{{ $targetDate->format('Y-m-d') }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black px-2.5 py-1.5 font-medium" onchange="this.form.submit()">
+                </form>
+
+                <button onclick="closeKpiDetails()" class="text-slate-400 hover:text-slate-600 transition-colors ml-2">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -137,7 +142,7 @@
 
     <!-- Black & White Corporate Employees Table with Pagination -->
     <div class="bw-card rounded-2xl overflow-hidden shadow-sm bg-white border border-slate-200">
-        <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+        <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h3 class="font-heading text-base font-extrabold text-slate-900 flex items-center">
                     <i data-lucide="users" class="w-4 h-4 mr-2 text-slate-900"></i>
@@ -145,6 +150,19 @@
                 </h3>
                 <p class="text-xs text-slate-500 font-medium mt-0.5">Visualización y control de empleados activos</p>
             </div>
+            
+            <form method="GET" action="{{ route('dashboard') }}" class="flex items-center space-x-2 w-full sm:w-auto">
+                <input type="hidden" name="date" value="{{ $targetDate->format('Y-m-d') }}">
+                <div class="relative w-full sm:w-64">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar nombre o ID..." class="bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full pl-9 px-3 py-2 font-medium">
+                </div>
+                <button type="submit" class="bg-black hover:bg-slate-800 text-white font-bold rounded-lg text-xs px-4 py-2 transition-colors">
+                    Buscar
+                </button>
+            </form>
         </div>
 
         <div class="overflow-x-auto">

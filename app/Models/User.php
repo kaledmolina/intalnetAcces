@@ -62,4 +62,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Device::class);
     }
+
+    public function isReadOnlyAdmin(): bool
+    {
+        // Un superadmin nunca es de solo lectura
+        if ($this->is_superadmin) {
+            return false;
+        }
+
+        // Si tiene asignado al menos un departamento, es considerado monitor de solo lectura
+        if (!empty($this->assigned_departments) && is_array($this->assigned_departments) && count($this->assigned_departments) > 0) {
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -29,17 +29,19 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <a href="{{ route('employees.edit', $employee) }}" class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-extrabold rounded-xl transition-all flex items-center shadow-sm">
-                <i data-lucide="edit" class="w-3.5 h-3.5 mr-2"></i> Editar Perfil
-            </a>
+            @if(!auth()->user()->isReadOnlyAdmin())
+                <a href="{{ route('employees.edit', $employee) }}" class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-extrabold rounded-xl transition-all flex items-center shadow-sm">
+                    <i data-lucide="edit" class="w-3.5 h-3.5 mr-2"></i> Editar Perfil
+                </a>
 
-            <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('¿Seguro de eliminar este empleado?')" class="w-full md:w-auto">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="w-full px-4 py-2 bg-white hover:bg-red-50 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center shadow-sm">
-                    <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-2"></i> Eliminar
-                </button>
-            </form>
+                <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('¿Seguro de eliminar este empleado?')" class="w-full md:w-auto">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="w-full px-4 py-2 bg-white hover:bg-red-50 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center shadow-sm">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-2"></i> Eliminar
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 
@@ -72,7 +74,12 @@
                                 <div class="flex justify-between font-bold text-xs py-1.5 border-b border-slate-100 last:border-0">
                                     <span class="text-slate-500">{{ $diasSemana[$day->day_of_week] }}</span>
                                     @if($day->is_working_day)
-                                        <span class="font-mono text-slate-900 font-extrabold">{{ substr($day->entry_time, 0, 5) }} - {{ substr($day->exit_time, 0, 5) }}</span>
+                                        <div class="text-right">
+                                            <span class="font-mono text-slate-900 font-extrabold">{{ substr($day->entry_time, 0, 5) }} - {{ substr($day->exit_time, 0, 5) }}</span>
+                                            @if($day->break_start_time && $day->break_end_time)
+                                                <span class="block text-[10px] text-slate-400 font-medium mt-0.5">Almuerzo: {{ substr($day->break_start_time, 0, 5) }} a {{ substr($day->break_end_time, 0, 5) }}</span>
+                                            @endif
+                                        </div>
                                     @else
                                         <span class="text-slate-400 font-medium italic">Día Libre</span>
                                     @endif

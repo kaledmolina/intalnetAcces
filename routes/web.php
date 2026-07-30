@@ -31,40 +31,51 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard y Perfil
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/dashboard/sync', [DashboardController::class, 'sync'])->name('dashboard.sync');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/register-sede', [UserController::class, 'registerMySede'])->name('profile.register-sede');
 
-    // Empleados, Captura de Huella, Confirmación, Sondeo y Importación ISAPI
-    Route::post('/employees/capture-fingerprint', [EmployeeController::class, 'captureFingerprint'])->name('employees.capture-fingerprint');
-    Route::post('/employees/confirm-fingerprint', [EmployeeController::class, 'confirmFingerprint'])->name('employees.confirm-fingerprint');
-    Route::post('/employees/check-fingerprint-status', [EmployeeController::class, 'checkFingerprintStatus'])->name('employees.check-fingerprint-status');
-    Route::post('/employees/import-from-devices', [EmployeeController::class, 'importFromDevices'])->name('employees.import');
-    Route::resource('employees', EmployeeController::class);
+    // Rutas protegidas contra edición por monitores (Solo Lectura)
+    Route::middleware('readonly')->group(function () {
+        Route::post('/dashboard/sync', [DashboardController::class, 'sync'])->name('dashboard.sync');
 
-    // Departamentos
-    Route::resource('departments', DepartmentController::class)->except(['create', 'show', 'edit']);
-    Route::post('/departments/{department}/assign-employees', [DepartmentController::class, 'assignEmployees'])->name('departments.assign-employees');
+        // Empleados, Captura de Huella, Confirmación, Sondeo y Importación ISAPI
+        Route::post('/employees/capture-fingerprint', [EmployeeController::class, 'captureFingerprint'])->name('employees.capture-fingerprint');
+        Route::post('/employees/confirm-fingerprint', [EmployeeController::class, 'confirmFingerprint'])->name('employees.confirm-fingerprint');
+        Route::post('/employees/check-fingerprint-status', [EmployeeController::class, 'checkFingerprintStatus'])->name('employees.check-fingerprint-status');
+        Route::post('/employees/import-from-devices', [EmployeeController::class, 'importFromDevices'])->name('employees.import');
+        Route::resource('employees', EmployeeController::class)->except(['index', 'show']);
 
-    // Horarios
-    Route::resource('schedules', ScheduleController::class)->except(['create', 'show', 'edit']);
-    Route::post('/schedules/{schedule}/assign-department', [ScheduleController::class, 'assignDepartment'])->name('schedules.assign-department');
+        // Departamentos
+        Route::resource('departments', DepartmentController::class)->except(['create', 'show', 'edit', 'index']);
+        Route::post('/departments/{department}/assign-employees', [DepartmentController::class, 'assignEmployees'])->name('departments.assign-employees');
 
-    // Marcaciones y Reportes
+        // Horarios
+        Route::resource('schedules', ScheduleController::class)->except(['create', 'show', 'edit', 'index']);
+        Route::post('/schedules/{schedule}/assign-department', [ScheduleController::class, 'assignDepartment'])->name('schedules.assign-department');
+
+        // Marcaciones
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+
+        // Dispositivos / Huelleros
+        Route::resource('devices', DeviceController::class)->except(['create', 'show', 'edit', 'index']);
+        Route::post('/devices/{device}/test', [DeviceController::class, 'testConnection'])->name('devices.test');
+        Route::post('/devices/{device}/sync', [DeviceController::class, 'syncDevice'])->name('devices.sync');
+        Route::post('/devices/{device}/configure-auto', [DeviceController::class, 'configureAuto'])->name('devices.configure-auto');
+
+        // Respaldos (Backup y Restauración)
+        Route::post('/backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
+    });
+
+    // Rutas de lectura (Permitidas para Monitores)
+    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+    Route::get('/departments', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::get('/attendance/export', [AttendanceController::class, 'exportCsv'])->name('attendance.export');
-
-    // Dispositivos / Huelleros
-    Route::resource('devices', DeviceController::class)->except(['create', 'show', 'edit']);
-    Route::post('/devices/{device}/test', [DeviceController::class, 'testConnection'])->name('devices.test');
-    Route::post('/devices/{device}/sync', [DeviceController::class, 'syncDevice'])->name('devices.sync');
-    Route::post('/devices/{device}/configure-auto', [DeviceController::class, 'configureAuto'])->name('devices.configure-auto');
-
-    // Respaldos (Backup y Restauración)
+    Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
     Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
     Route::get('/backups/download', [BackupController::class, 'download'])->name('backups.download');
-    Route::post('/backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
 
     // Administración de Usuarios y Sedes (Solo Superadmin)
     Route::middleware('superadmin')->group(function () {

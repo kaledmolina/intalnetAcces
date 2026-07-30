@@ -73,8 +73,13 @@ class DashboardController extends Controller
             ];
         }
 
-        // Lista de empleados paginada con su estado de hoy
-        $employeesPaginated = Employee::with('department')->where('is_active', true)->paginate(10);
+        // Lista de empleados paginada con su estado de hoy (filtrable por búsqueda)
+        $empQuery = Employee::with('department')->where('is_active', true);
+        if ($request->filled('search')) {
+            $empQuery->where('name', 'like', '%' . $request->search . '%')
+                     ->orWhere('employee_no', 'like', '%' . $request->search . '%');
+        }
+        $employeesPaginated = $empQuery->paginate(10)->withQueryString();
 
         $paginatedIds = $employeesPaginated->pluck('id');
         $todayPunchesPaginated = AttendanceRecord::whereDate('event_time', $today)
@@ -112,6 +117,7 @@ class DashboardController extends Controller
             ->pluck('employee_id')
             ->unique()
             ->filter();
+            
         $lateEmployeesList = Employee::with('department')->whereIn('id', $lateEmpIds)->get()->map(function ($emp) use ($todayPunches) {
             $punch = $todayPunches->get($emp->id)?->first();
             $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';

@@ -243,7 +243,6 @@ class EmployeeController extends Controller
 
                             if ($punches->count() >= 4) {
                                 // Tiene 4 marcaciones o más, tomamos la 2da como salida de almuerzo y la penúltima como regreso
-                                // O más preciso, la primera como entrada, la última como salida y las intermedias para almuerzo.
                                 $lunchOut = clone $punches[1]->event_time;
                                 $lunchIn = clone $punches[$punches->count() - 2]->event_time;
 
@@ -252,10 +251,17 @@ class EmployeeController extends Controller
 
                                 $totalWorkedMinutes = $morningMinutes + $afternoonMinutes;
                             } else {
-                                // Menos de 4 huellas, no reportó almuerzo. Descontamos el tiempo programado.
-                                $totalWorkedMinutes = $diffMinutes - $scheduledLunchMinutes;
-                                if ($totalWorkedMinutes < 0) $totalWorkedMinutes = 0;
-                                $notes[] = "⚠️ Hora de almuerzo no reportada en el huellero";
+                                // Menos de 4 huellas. Verificar si marcó la salida al final del día.
+                                if ($lastPunch->lt($schExit->copy()->subHours(1))) {
+                                    // Salió mucho antes de la hora de salida (probablemente a almorzar y no volvió)
+                                    $totalWorkedMinutes = 0;
+                                    $notes[] = "⚠️ Marcación incompleta (Falta retorno/salida final)";
+                                } else {
+                                    // Salió al final del día pero no reportó almuerzo. Descontamos el tiempo programado.
+                                    $totalWorkedMinutes = $diffMinutes - $scheduledLunchMinutes;
+                                    if ($totalWorkedMinutes < 0) $totalWorkedMinutes = 0;
+                                    $notes[] = "⚠️ Hora de almuerzo no reportada en el huellero";
+                                }
                             }
                         } else {
                             $totalWorkedMinutes = $diffMinutes;

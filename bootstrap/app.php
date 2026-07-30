@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'superadmin' => \App\Http\Middleware\EnsureUserIsSuperadmin::class,
+            'readonly' => \App\Http\Middleware\CheckReadOnlyAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

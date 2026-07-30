@@ -21,7 +21,7 @@
         </div>
 
         <div class="flex flex-col sm:flex-row items-center gap-2.5 shrink-0 w-full xl:w-auto">
-            @if($deviceCount > 0)
+            @if($deviceCount > 0 && !auth()->user()->isReadOnlyAdmin())
                 <!-- Botón Importar Usuarios del Huellero -->
                 <form action="{{ route('employees.import') }}" method="POST" class="w-full sm:w-auto inline-flex">
                     @csrf
@@ -110,21 +110,23 @@
                                         <span>Ver</span>
                                     </a>
 
-                                    <!-- Editar Datos -->
-                                    <a href="{{ route('employees.edit', $employee) }}" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white hover:bg-slate-100 hover:text-slate-900 border border-slate-300 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs">
-                                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-700"></i>
-                                        <span>Editar</span>
-                                    </a>
+                                    @if(!auth()->user()->isReadOnlyAdmin())
+                                        <!-- Editar Datos -->
+                                        <a href="{{ route('employees.edit', $employee) }}" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-slate-700 bg-white hover:bg-slate-100 hover:text-slate-900 border border-slate-300 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs">
+                                            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-700"></i>
+                                            <span>Editar</span>
+                                        </a>
 
-                                    <!-- Eliminar -->
-                                    <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('¿Eliminar al empleado {{ $employee->name }}?')" class="inline-block">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-red-600 bg-white hover:bg-red-50 hover:text-red-700 border border-red-200 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs">
-                                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-600"></i>
-                                            <span>Borrar</span>
-                                        </button>
-                                    </form>
+                                        <!-- Eliminar -->
+                                        <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('¿Eliminar al empleado {{ $employee->name }}?')" class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-red-600 bg-white hover:bg-red-50 hover:text-red-700 border border-red-200 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-600"></i>
+                                                <span>Borrar</span>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

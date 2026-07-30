@@ -19,10 +19,12 @@
             </div>
         </div>
 
-        <button type="button" data-modal-target="deviceModal" data-modal-toggle="deviceModal" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-sm px-5 py-2.5 flex items-center space-x-2 shadow-md">
-            <i data-lucide="plus-circle" class="w-4 h-4"></i>
-            <span>+ Agregar Huellero</span>
-        </button>
+        @if(!auth()->user()->isReadOnlyAdmin())
+            <button type="button" data-modal-target="deviceModal" data-modal-toggle="deviceModal" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-sm px-5 py-2.5 flex items-center space-x-2 shadow-md">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>+ Agregar Huellero</span>
+            </button>
+        @endif
     </div>
 
     <!-- Terminal Status Grid (Black & White Style) -->
@@ -75,45 +77,49 @@
 
                 <!-- Botones de Acción Corporativos -->
                 <div class="pt-2 flex flex-wrap items-center justify-between gap-2">
-                    <form action="{{ route('devices.test', $device) }}" method="POST" class="flex-1 min-w-[130px]">
-                        @csrf
-                        <button type="submit" class="w-full text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm">
-                            <i data-lucide="radio" class="w-3.5 h-3.5 text-slate-900"></i>
-                            <span>Probar Conexión</span>
-                        </button>
-                    </form>
+                    @if(!auth()->user()->isReadOnlyAdmin())
+                        <form action="{{ route('devices.test', $device) }}" method="POST" class="flex-1 min-w-[130px]">
+                            @csrf
+                            <button type="submit" class="w-full text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm">
+                                <i data-lucide="radio" class="w-3.5 h-3.5 text-slate-900"></i>
+                                <span>Probar Conexión</span>
+                            </button>
+                        </form>
 
-                    <form action="{{ route('devices.sync', $device) }}" method="POST" class="flex-1 min-w-[130px]">
-                        @csrf
-                        <button type="submit" class="w-full text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-md">
-                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-white"></i>
-                            <span>Sincronizar</span>
-                        </button>
-                    </form>
+                        <form action="{{ route('devices.sync', $device) }}" method="POST" class="flex-1 min-w-[130px]">
+                            @csrf
+                            <button type="submit" class="w-full text-white bg-black hover:bg-slate-800 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-md">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-white"></i>
+                                <span>Sincronizar</span>
+                            </button>
+                        </form>
 
-                    <form action="{{ route('devices.configure-auto', $device) }}" method="POST" class="flex-1 min-w-[150px]">
-                        @csrf
-                        <button type="submit" class="w-full text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm" title="Activar modo de marcación directa sin presionar teclas">
-                            <i data-lucide="zap" class="w-3.5 h-3.5 text-slate-900"></i>
-                            <span>Auto Marcación (Sin Teclas)</span>
-                        </button>
-                    </form>
+                        <form action="{{ route('devices.configure-auto', $device) }}" method="POST" class="flex-1 min-w-[150px]">
+                            @csrf
+                            <button type="submit" class="w-full text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm" title="Activar modo de marcación directa sin presionar teclas">
+                                <i data-lucide="zap" class="w-3.5 h-3.5 text-slate-900"></i>
+                                <span>Auto Marcación (Sin Teclas)</span>
+                            </button>
+                        </form>
 
-                    <!-- Botón Editar Huellero -->
-                    <button type="button" data-modal-target="editDeviceModal_{{ $device->id }}" data-modal-toggle="editDeviceModal_{{ $device->id }}" class="text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm">
-                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-900"></i>
-                        <span>Editar</span>
-                    </button>
-
-                    <!-- Botón Eliminar Huellero -->
-                    <form action="{{ route('devices.destroy', $device) }}" method="POST" onsubmit="return confirm('¿Eliminar el huellero {{ $device->name }}?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-slate-900"></i>
-                            <span>Borrar</span>
+                        <!-- Botón Editar Huellero -->
+                        <button type="button" data-modal-target="editDeviceModal_{{ $device->id }}" data-modal-toggle="editDeviceModal_{{ $device->id }}" class="text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-900"></i>
+                            <span>Editar</span>
                         </button>
-                    </form>
+
+                        <!-- Botón Eliminar Huellero -->
+                        <form action="{{ route('devices.destroy', $device) }}" method="POST" onsubmit="return confirm('¿Eliminar el huellero {{ $device->name }}?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 font-extrabold rounded-xl text-xs px-3 py-2 flex items-center justify-center space-x-1 shadow-sm">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-slate-900"></i>
+                                <span>Borrar</span>
+                            </button>
+                        </form>
+                    @else
+                        <span class="text-xs text-slate-400 font-medium italic">Solo lectura</span>
+                    @endif
                 </div>
             </div>
 
