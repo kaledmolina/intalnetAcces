@@ -206,22 +206,26 @@
                                             </label>
                                         </div>
                                         
-                                        <div class="flex-1 grid grid-cols-4 gap-1 time-inputs-container {{ $isWorking ? '' : 'opacity-30 pointer-events-none' }}">
-                                            <div>
-                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Entrada</span>
-                                                <input type="time" name="days[{{ $num }}][entry_time]" value="{{ $entryTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                        <div class="flex-1 space-y-1.5 time-inputs-container {{ $isWorking ? '' : 'opacity-30 pointer-events-none' }}">
+                                            <div class="grid grid-cols-2 gap-2 bg-white/50 p-1.5 rounded-lg border border-slate-200">
+                                                <div>
+                                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Entrada (Mañana)</span>
+                                                    <input type="time" name="days[{{ $num }}][entry_time]" value="{{ $entryTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                                </div>
+                                                <div>
+                                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Salida (Tarde)</span>
+                                                    <input type="time" name="days[{{ $num }}][exit_time]" value="{{ $exitTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                                </div>
                                             </div>
-                                            <div>
-                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Inicio Almuerzo">Salida Al.</span>
-                                                <input type="time" name="days[{{ $num }}][break_start_time]" value="{{ $breakStartTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
-                                            </div>
-                                            <div>
-                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Fin Almuerzo">Reg. Al.</span>
-                                                <input type="time" name="days[{{ $num }}][break_end_time]" value="{{ $breakEndTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
-                                            </div>
-                                            <div>
-                                                <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Salida</span>
-                                                <input type="time" name="days[{{ $num }}][exit_time]" value="{{ $exitTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                            <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                                                <div>
+                                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5 text-slate-600">Salida Almuerzo</span>
+                                                    <input type="time" name="days[{{ $num }}][break_start_time]" value="{{ $breakStartTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono text-slate-600">
+                                                </div>
+                                                <div>
+                                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5 text-slate-600">Regreso Almuerzo</span>
+                                                    <input type="time" name="days[{{ $num }}][break_end_time]" value="{{ $breakEndTime }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono text-slate-600">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -291,22 +295,26 @@
                                 </label>
                             </div>
                             
-                            <div class="flex-1 grid grid-cols-4 gap-1 time-inputs-container">
-                                <div>
-                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Entrada</span>
-                                    <input type="time" name="days[{{ $num }}][entry_time]" value="08:00" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                            <div class="flex-1 space-y-1.5 time-inputs-container">
+                                <div class="grid grid-cols-2 gap-2 bg-white/50 p-1.5 rounded-lg border border-slate-200">
+                                    <div>
+                                        <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Entrada (Mañana)</span>
+                                        <input type="time" name="days[{{ $num }}][entry_time]" value="08:00" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                    </div>
+                                    <div>
+                                        <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Salida (Tarde)</span>
+                                        <input type="time" name="days[{{ $num }}][exit_time]" value="17:00" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                    </div>
                                 </div>
-                                <div>
-                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Inicio Almuerzo">Salida Al.</span>
-                                    <input type="time" name="days[{{ $num }}][break_start_time]" value="" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
-                                </div>
-                                <div>
-                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5" title="Fin Almuerzo">Reg. Al.</span>
-                                    <input type="time" name="days[{{ $num }}][break_end_time]" value="" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
-                                </div>
-                                <div>
-                                    <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5">Salida</span>
-                                    <input type="time" name="days[{{ $num }}][exit_time]" value="17:00" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono">
+                                <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                                    <div>
+                                        <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5 text-slate-600">Salida Almuerzo</span>
+                                        <input type="time" name="days[{{ $num }}][break_start_time]" value="" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono text-slate-600">
+                                    </div>
+                                    <div>
+                                        <span class="block text-[9px] uppercase font-bold text-slate-500 mb-0.5 text-slate-600">Regreso Almuerzo</span>
+                                        <input type="time" name="days[{{ $num }}][break_end_time]" value="" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-full p-1.5 font-mono text-slate-600">
+                                    </div>
                                 </div>
                             </div>
                         </div>
