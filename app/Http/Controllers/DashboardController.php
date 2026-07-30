@@ -112,11 +112,47 @@ class DashboardController extends Controller
             return $emp;
         });
 
-        $lateEmpIds = AttendanceRecord::whereDate('event_time', $today)
+        $lateEmpIdsArray = AttendanceRecord::whereDate('event_time', $today)
             ->where('is_late', true)
             ->pluck('employee_id')
-            ->unique()
-            ->filter();
+            ->toArray();
+
+        $dayOfWeek = $today->dayOfWeekIso;
+
+        foreach ($presentEmployeesList as $emp) {
+            if (in_array($emp->id, $lateEmpIdsArray)) continue;
+
+            $punches = $todayPunches->get($emp->id);
+            if (!$punches || $punches->count() < 2) continue; // Necesita al menos 2 marcaciones para evaluar salida
+
+            $lastPunch = clone $punches->last()->event_time;
+            $currentSchedule = $emp->currentSchedule();
+            
+            if ($currentSchedule) {
+                $dayConfig = clone $currentSchedule->days->where('day_of_week', $dayOfWeek)->first();
+                
+                if ($dayConfig && $dayConfig->is_working_day && $dayConfig->exit_time) {
+                    $schExit = \Carbon\Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->exit_time);
+                    $tolerance = $currentSchedule->tolerance_minutes;
+
+                    // Límite inferior (salió muy temprano)
+                    $earlyLimit = $schExit->copy()->subMinutes($tolerance);
+                    // Límite superior (salió muy tarde)
+                    $lateLimit = $schExit->copy()->addMinutes($tolerance);
+
+                    if ($lastPunch->lt($earlyLimit) || $lastPunch->gt($lateLimit)) {
+                        $lateEmpIdsArray[] = $emp->id;
+                    }
+                }
+            }
+        }
+        
+        $lateEmpIdsArray = array_unique($lateEmpIdsArray);
+        $lateEmpIds = collect($lateEmpIdsArray);
+        
+        // Actualizar el KPI de la tarjeta superior
+        $lateTodayCount = $lateEmpIds->count();
+
             
         $lateEmployeesList = Employee::with('department')->whereIn('id', $lateEmpIds)->get()->map(function ($emp) use ($todayPunches) {
             $punch = $todayPunches->get($emp->id)?->first();
