@@ -125,7 +125,12 @@ class DashboardController extends Controller
             $punches = $todayPunches->get($emp->id);
             if (!$punches || $punches->count() < 2) continue; // Necesita al menos 2 marcaciones para evaluar salida
 
+            $firstPunch = clone $punches->first()->event_time;
             $lastPunch = clone $punches->last()->event_time;
+            
+            // Si la diferencia es menor a 30 mins, no lo contamos como salida válida (evita doble marcación rápida)
+            if ($firstPunch->diffInMinutes($lastPunch) < 30) continue;
+
             $currentSchedule = $emp->currentSchedule();
             
             if ($currentSchedule) {
