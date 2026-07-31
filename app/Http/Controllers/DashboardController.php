@@ -119,11 +119,32 @@ class DashboardController extends Controller
 
         $dayOfWeek = $today->dayOfWeekIso;
 
+        $earlyEmpIdsArray = [];
+
         foreach ($presentEmployeesList as $emp) {
             if (in_array($emp->id, $lateEmpIdsArray)) continue;
 
             $punches = $todayPunches->get($emp->id);
-            if (!$punches || $punches->count() < 2) continue; // Necesita al menos 2 marcaciones para evaluar salida
+            if (!$punches) continue;
+            
+            $firstPunch = clone $punches->first()->event_time;
+            $currentSchedule = $emp->currentSchedule();
+            
+            if ($currentSchedule) {
+                $dayConfig = clone $currentSchedule->days->where('day_of_week', $dayOfWeek)->first();
+                if ($dayConfig && $dayConfig->is_working_day && $dayConfig->entry_time) {
+                    $schEntry = \Carbon\Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->entry_time);
+                    $tolerance = $currentSchedule->tolerance_minutes;
+                    $earlyLimit = $schEntry->copy()->subMinutes($tolerance);
+
+                    // Si marcó antes del horario menos tolerancia
+                    if ($firstPunch->lt($earlyLimit)) {
+                        $earlyEmpIdsArray[] = $emp->id;
+                    }
+                }
+            }
+
+            if ($punches->count() < 2) continue; // Necesita al menos 2 marcaciones para evaluar salida
 
             $firstPunch = clone $punches->first()->event_time;
             $lastPunch = clone $punches->last()->event_time;
@@ -171,17 +192,29 @@ class DashboardController extends Controller
             ->whereNotIn('id', $todayRecordEmpIds)
             ->get();
 
+        $earlyEmpIdsArray = array_unique($earlyEmpIdsArray);
+        $earlyEmpIds = collect($earlyEmpIdsArray);
+        $earlyTodayCount = $earlyEmpIds->count();
+
+        $earlyEmployeesList = Employee::with('department')->whereIn('id', $earlyEmpIds)->get()->map(function ($emp) use ($todayPunches) {
+            $punch = $todayPunches->get($emp->id)?->first();
+            $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
+            return $emp;
+        });
+
         return view('dashboard', compact(
             'targetDate',
             'totalEmployees',
             'presentCount',
             'absentCount',
             'lateTodayCount',
+            'earlyTodayCount',
             'devices',
             'devicesData',
             'chartData',
             'employeesPaginated',
             'totalEmployeesList',
+            'earlyEmployeesList',
             'presentEmployeesList',
             'lateEmployeesList',
             'absentEmployeesList'

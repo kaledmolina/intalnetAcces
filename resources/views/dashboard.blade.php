@@ -22,17 +22,17 @@
 
     <!-- Black & White High Contrast KPI Cards Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- Empleados Totales -->
-        <div id="card-total" onclick="showKpiDetails('total')" class="kpi-card cursor-pointer bw-card bw-card-hover p-6 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+        <!-- Anticipados Hoy -->
+        <div id="card-early" onclick="showKpiDetails('early')" class="kpi-card cursor-pointer bw-card bw-card-hover p-6 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Total Personal</span>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Anticipados Hoy</span>
                 <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
-                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <i data-lucide="sun" class="w-5 h-5"></i>
                 </div>
             </div>
             <div>
-                <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $totalEmployees }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Empleados registrados</span>
+                <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $earlyTodayCount }}</span>
+                <span class="text-xs text-slate-500 block mt-1 font-semibold">Ingresos antes del horario</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
                 <div class="bg-black h-full w-full"></div>
@@ -290,8 +290,8 @@
 @push('scripts')
 <script>
 {
-    // Datos interactivos inyectados
-    const totalEmployeesData = @json($totalEmployeesList);
+    // Datos interactivos
+    const earlyEmployeesData = @json($earlyEmployeesList);
     const presentEmployeesData = @json($presentEmployeesList);
     const lateEmployeesData = @json($lateEmployeesList);
     const absentEmployeesData = @json($absentEmployeesList);
@@ -314,12 +314,14 @@
             card.classList.remove('ring-2', 'ring-black', 'border-black');
         });
 
-        if (type === 'total') {
-            data = totalEmployeesData;
-            title = 'Total Personal Registrado';
-            iconName = 'users';
-            document.getElementById('card-total').classList.add('ring-2', 'ring-black', 'border-black');
-            stateBadgeGenerator = (emp) => `<span class="bg-slate-100 text-slate-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-slate-200">Activo</span>`;
+        if (type === 'early') {
+            data = earlyEmployeesData;
+            title = 'Personal Anticipado Hoy';
+            iconName = 'sun';
+            document.getElementById('card-early').classList.add('ring-2', 'ring-black', 'border-black');
+            stateBadgeGenerator = (emp) => `<span class="bg-black text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-black inline-flex items-center shadow-sm">
+                <i data-lucide="sun" class="w-3 h-3 mr-1 text-white"></i> Entrada: ${emp.today_punch_time}
+            </span>`;
         } else if (type === 'present') {
             data = presentEmployeesData;
             title = 'Personal Presente Hoy';
