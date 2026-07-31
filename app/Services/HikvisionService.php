@@ -450,6 +450,23 @@ class HikvisionService
                                         $lateMinutes = $eventTime->diffInMinutes($closest['time']);
                                     }
                                 }
+
+                                // Si es la primera marcación del día y es después de la tolerancia de entrada, siempre es tardanza
+                                // Esto cubre casos donde el empleado olvidó marcar entrada y solo marca salida a almorzar
+                                if (!$isLate && isset($expectedTimes['entry'])) {
+                                    $entryToleranceDeadline = (clone $expectedTimes['entry']['time'])->addMinutes($schedule->tolerance_minutes);
+                                    if ($eventTime->greaterThan($entryToleranceDeadline)) {
+                                        $hasEarlierPunch = \App\Models\AttendanceRecord::where('employee_id', $employee->id)
+                                            ->whereDate('event_time', $eventTime->toDateString())
+                                            ->where('event_time', '<', $eventTime->format('Y-m-d H:i:s'))
+                                            ->exists();
+                                            
+                                        if (!$hasEarlierPunch) {
+                                            $isLate = true;
+                                            $lateMinutes = $eventTime->diffInMinutes($expectedTimes['entry']['time']);
+                                        }
+                                    }
+                                }
                             }
                         }
 
