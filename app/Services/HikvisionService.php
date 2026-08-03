@@ -321,8 +321,17 @@ class HikvisionService
      */
     public function syncEventsFromDevice(Device $device, ?Carbon $startDate = null, ?Carbon $endDate = null): int
     {
-        $startDate = $startDate ?? now()->startOfDay();
-        $endDate = $endDate ?? now()->endOfDay();
+        if ($startDate === null) {
+            $startDate = clone ($device->last_sync_at ?? now()->startOfDay());
+            // Restar unos minutos de margen para no perder eventos en el límite
+            $startDate->subMinutes(5);
+            
+            // Límite máximo de retroactividad para no saturar el dispositivo (7 días)
+            if ($startDate->lt(now()->subDays(7))) {
+                $startDate = now()->subDays(7)->startOfDay();
+            }
+        }
+        $endDate = $endDate ?? now()->addDay()->startOfDay();
 
         $eventsCount = 0;
 
