@@ -293,21 +293,51 @@
     </div>
 </div>
 
-<form id="note_form" method="POST" action="{{ route('employees.notes.save', $employee->id) }}" class="hidden">
-    @csrf
-    <input type="hidden" name="date" id="note_date">
-    <input type="hidden" name="note" id="note_content">
-</form>
+<!-- Modal para Agregar/Editar Nota -->
+<div id="note_modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center transition-opacity">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+        <form id="note_form" method="POST" action="{{ route('employees.notes.save', $employee->id) }}">
+            @csrf
+            <input type="hidden" name="date" id="note_date">
+            
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-sm">Anotación para el <span id="modal_date_display" class="text-blue-600"></span></h3>
+                <button type="button" onclick="closeNoteModal()" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <label for="note_content" class="block text-xs font-bold text-slate-700 mb-2">Comentario o justificación</label>
+                <textarea name="note" id="note_content" rows="4" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-black focus:border-black block p-3 outline-none resize-none" placeholder="Escribe aquí los detalles (ej. Permiso médico, Llegada tarde justificada, etc)..."></textarea>
+                <p class="text-[10px] text-slate-400 mt-2 italic">Nota: Si deseas eliminar una nota existente, simplemente borra todo el texto y guarda.</p>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end space-x-2">
+                <button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors focus:outline-none">Cancelar</button>
+                <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-black rounded-lg hover:bg-slate-800 transition-colors focus:outline-none">Guardar Nota</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 @push('scripts')
 <script>
     function addNote(date, currentNote) {
-        let note = prompt("Nota para el " + date + " (deja vacío para eliminar):", currentNote);
-        if (note !== null) {
-            document.getElementById('note_date').value = date;
-            document.getElementById('note_content').value = note;
-            document.getElementById('note_form').submit();
-        }
+        document.getElementById('modal_date_display').innerText = date;
+        document.getElementById('note_date').value = date;
+        document.getElementById('note_content').value = currentNote;
+        
+        const modal = document.getElementById('note_modal');
+        modal.classList.remove('hidden');
+        
+        setTimeout(() => {
+            document.getElementById('note_content').focus();
+        }, 100);
+    }
+    
+    function closeNoteModal() {
+        document.getElementById('note_modal').classList.add('hidden');
     }
     function switchTab(tabName) {
         const hoursTab = document.getElementById('tab-content-hours');
