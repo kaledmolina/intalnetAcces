@@ -18,7 +18,7 @@ class EmployeeDailyNote extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
+        // 'date' => 'date',
     ];
 
     public function employee(): BelongsTo
