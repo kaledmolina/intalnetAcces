@@ -235,6 +235,7 @@ class EmployeeController extends Controller
 
             $totalWorkedMinutes = 0;
             $extraMinutes = 0;
+            $notes = [];
             
             $dailyNote = \App\Models\EmployeeDailyNote::where('employee_id', $employee->id)
                 ->where('date', $row->event_date)

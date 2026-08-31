@@ -177,6 +177,14 @@
                                                     </span>
                                                 @endif
 
+                                                @if(count($row->notes) > 0)
+                                                    @foreach($row->notes as $sysNote)
+                                                        <span class="text-[9px] text-amber-600 font-bold italic block mt-1 text-right">
+                                                            {{ $sysNote }}
+                                                        </span>
+                                                    @endforeach
+                                                @endif
+                                                
                                                 @if($row->note)
                                                     <span class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 rounded-md border border-purple-200 mt-1 inline-block text-right">
                                                         Nota: {{ $row->note }}
