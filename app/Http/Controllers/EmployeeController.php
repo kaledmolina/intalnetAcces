@@ -156,6 +156,33 @@ class EmployeeController extends Controller
         ]);
     }
 
+    public function saveNote(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'note' => 'nullable|string',
+        ]);
+
+        if (empty($request->note)) {
+            \App\Models\EmployeeDailyNote::where('employee_id', $employee->id)
+                ->where('date', $request->date)
+                ->delete();
+        } else {
+            \App\Models\EmployeeDailyNote::updateOrCreate(
+                [
+                    'employee_id' => $employee->id,
+                    'date' => $request->date,
+                ],
+                [
+                    'note' => $request->note,
+                    'user_id' => auth()->id(),
+                ]
+            );
+        }
+
+        return redirect()->back()->with('success', 'Nota guardada exitosamente.');
+    }
+
     public function importFromDevices(HikvisionService $hikvisionService)
     {
         $result = $hikvisionService->importUsersFromAllDevices();
@@ -208,7 +235,11 @@ class EmployeeController extends Controller
 
             $totalWorkedMinutes = 0;
             $extraMinutes = 0;
-            $notes = [];
+            
+            $dailyNote = \App\Models\EmployeeDailyNote::where('employee_id', $employee->id)
+                ->where('date', $row->event_date)
+                ->first();
+            $row->note = $dailyNote ? $dailyNote->note : null;
 
             if ($punches->count() >= 2) {
                 $firstPunch = clone $punches->first()->event_time;

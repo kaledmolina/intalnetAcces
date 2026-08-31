@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/dashboard/sync', [DashboardController::class, 'sync'])->name('dashboard.sync');
 
         // Empleados, Captura de Huella, Confirmación, Sondeo y Importación ISAPI
+        Route::post('/employees/{employee}/notes', [EmployeeController::class, 'saveNote'])->name('employees.notes.save');
         Route::post('/employees/capture-fingerprint', [EmployeeController::class, 'captureFingerprint'])->name('employees.capture-fingerprint');
         Route::post('/employees/confirm-fingerprint', [EmployeeController::class, 'confirmFingerprint'])->name('employees.confirm-fingerprint');
         Route::post('/employees/check-fingerprint-status', [EmployeeController::class, 'checkFingerprintStatus'])->name('employees.check-fingerprint-status');

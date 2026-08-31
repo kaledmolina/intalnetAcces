@@ -177,13 +177,14 @@
                                                     </span>
                                                 @endif
 
-                                                @if(count($row->notes) > 0)
-                                                    @foreach($row->notes as $note)
-                                                        <span class="text-[9px] text-amber-600 font-bold italic block mt-1">
-                                                            {{ $note }}
-                                                        </span>
-                                                    @endforeach
+                                                @if($row->note)
+                                                    <span class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 rounded-md border border-purple-200 mt-1 inline-block text-right">
+                                                        Nota: {{ $row->note }}
+                                                    </span>
                                                 @endif
+                                                <button onclick="addNote('{{ $row->event_date }}', '{{ addslashes($row->note) }}')" class="text-[9px] text-blue-600 font-bold hover:underline mt-1">
+                                                    {{ $row->note ? 'Editar Nota' : '+ Agregar Nota' }}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -192,7 +193,22 @@
                                         <td colspan="4" class="px-6 py-12 text-center text-slate-400">
                                             <i data-lucide="clock" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
                                             <p class="text-xs font-bold">Sin registros de horas.</p>
-                                            <p class="text-[10px] mt-1 text-slate-400">Se necesitan al menos 2 marcaciones el mismo día para calcular horas laboradas.</p>
+                                            
+                                            @if(request('date'))
+                                                @php
+                                                    $noteForEmptyDay = \App\Models\EmployeeDailyNote::where('employee_id', $employee->id)->where('date', request('date'))->first();
+                                                @endphp
+                                                @if($noteForEmptyDay)
+                                                    <div class="mt-3 inline-block bg-purple-50 border border-purple-200 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-bold">
+                                                        Nota: {{ $noteForEmptyDay->note }}
+                                                    </div><br>
+                                                @endif
+                                                <button onclick="addNote('{{ request('date') }}', '{{ $noteForEmptyDay ? addslashes($noteForEmptyDay->note) : '' }}')" class="mt-3 bg-black hover:bg-slate-800 text-white font-bold rounded-lg text-xs px-4 py-2 transition-colors">
+                                                    {{ $noteForEmptyDay ? 'Editar Nota' : '+ Agregar Nota a este día' }}
+                                                </button>
+                                            @else
+                                                <p class="text-[10px] mt-1 text-slate-400">Usa el filtro de historial para ver un día específico y agregar notas.</p>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforelse
@@ -269,10 +285,22 @@
     </div>
 </div>
 
-
+<form id="note_form" method="POST" action="{{ route('employees.notes.save', $employee->id) }}" class="hidden">
+    @csrf
+    <input type="hidden" name="date" id="note_date">
+    <input type="hidden" name="note" id="note_content">
+</form>
 
 @push('scripts')
 <script>
+    function addNote(date, currentNote) {
+        let note = prompt("Nota para el " + date + " (deja vacío para eliminar):", currentNote);
+        if (note !== null) {
+            document.getElementById('note_date').value = date;
+            document.getElementById('note_content').value = note;
+            document.getElementById('note_form').submit();
+        }
+    }
     function switchTab(tabName) {
         const hoursTab = document.getElementById('tab-content-hours');
         const punchesTab = document.getElementById('tab-content-punches');
