@@ -186,13 +186,15 @@
                                                 @endif
                                                 
                                                 @if($row->note)
-                                                    <span class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 rounded-md border border-purple-200 mt-1 inline-block text-right">
-                                                        Nota: {{ $row->note }}
-                                                    </span>
+                                                    <button type="button" onclick="addNote('{{ $row->event_date }}', '{{ addslashes($row->note) }}')" class="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-1 rounded-md border border-purple-200 mt-1 flex items-center justify-end hover:bg-purple-100 transition-colors ml-auto">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                        Ver Nota
+                                                    </button>
+                                                @else
+                                                    <button onclick="addNote('{{ $row->event_date }}', '')" class="text-[9px] text-blue-600 font-bold hover:underline mt-1">
+                                                        + Agregar Nota
+                                                    </button>
                                                 @endif
-                                                <button onclick="addNote('{{ $row->event_date }}', '{{ addslashes($row->note) }}')" class="text-[9px] text-blue-600 font-bold hover:underline mt-1">
-                                                    {{ $row->note ? 'Editar Nota' : '+ Agregar Nota' }}
-                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -207,13 +209,15 @@
                                                     $noteForEmptyDay = \App\Models\EmployeeDailyNote::where('employee_id', $employee->id)->where('date', request('date'))->first();
                                                 @endphp
                                                 @if($noteForEmptyDay)
-                                                    <div class="mt-3 inline-block bg-purple-50 border border-purple-200 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-bold">
-                                                        Nota: {{ $noteForEmptyDay->note }}
-                                                    </div><br>
+                                                    <button type="button" onclick="addNote('{{ request('date') }}', '{{ addslashes($noteForEmptyDay->note) }}')" class="mt-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-bold rounded-lg text-xs px-4 py-2 transition-colors flex items-center mx-auto">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                        Ver Nota de Falla
+                                                    </button>
+                                                @else
+                                                    <button onclick="addNote('{{ request('date') }}', '')" class="mt-3 bg-black hover:bg-slate-800 text-white font-bold rounded-lg text-xs px-4 py-2 transition-colors">
+                                                        + Agregar Nota a este día
+                                                    </button>
                                                 @endif
-                                                <button onclick="addNote('{{ request('date') }}', '{{ $noteForEmptyDay ? addslashes($noteForEmptyDay->note) : '' }}')" class="mt-3 bg-black hover:bg-slate-800 text-white font-bold rounded-lg text-xs px-4 py-2 transition-colors">
-                                                    {{ $noteForEmptyDay ? 'Editar Nota' : '+ Agregar Nota a este día' }}
-                                                </button>
                                             @else
                                                 <p class="text-[10px] mt-1 text-slate-400">Usa el filtro de historial para ver un día específico y agregar notas.</p>
                                             @endif
