@@ -74,6 +74,8 @@ class DashboardController extends Controller
         }
 
         // Lista de empleados paginada con su estado de hoy (filtrable por búsqueda)
+        $dayOfWeek = $today->dayOfWeekIso;
+
         $empQuery = Employee::with('department')->where('is_active', true);
         if ($request->filled('search')) {
             $empQuery->where('name', 'like', '%' . $request->search . '%')
@@ -88,11 +90,35 @@ class DashboardController extends Controller
             ->get()
             ->groupBy('employee_id');
 
-        $employeesPaginated->getCollection()->transform(function ($emp) use ($todayPunchesPaginated) {
-            $punch = $todayPunchesPaginated->get($emp->id)?->first();
+        $employeesPaginated->getCollection()->transform(function ($emp) use ($todayPunchesPaginated, $targetDate, $dayOfWeek) {
+            $punches = $todayPunchesPaginated->get($emp->id);
+            $punch = $punches?->first();
             $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : null;
-            $emp->today_is_late = $punch ? $punch->is_late : false;
-            $emp->today_late_minutes = $punch ? $punch->late_minutes : 0;
+
+            $isLate = false;
+            $lateMinutes = 0;
+            if ($punch) {
+                if ($punch->is_late) {
+                    $isLate = true;
+                    $lateMinutes = abs((int) $punch->late_minutes);
+                } else {
+                    $currentSchedule = $emp->currentSchedule();
+                    if ($currentSchedule) {
+                        $dayConfig = $currentSchedule->days->where('day_of_week', $dayOfWeek)->first();
+                        if ($dayConfig && $dayConfig->is_working_day && $dayConfig->entry_time) {
+                            $schEntry = \Carbon\Carbon::parse($targetDate->format('Y-m-d') . ' ' . $dayConfig->entry_time);
+                            $tolerance = $currentSchedule->tolerance_minutes ?? 5;
+                            $entryLimit = $schEntry->copy()->addMinutes($tolerance);
+                            if ($punch->event_time->gt($entryLimit)) {
+                                $isLate = true;
+                                $lateMinutes = abs((int) $punch->event_time->diffInMinutes($schEntry));
+                            }
+                        }
+                    }
+                }
+            }
+            $emp->today_is_late = $isLate;
+            $emp->today_late_minutes = $lateMinutes;
             return $emp;
         });
 
@@ -104,87 +130,147 @@ class DashboardController extends Controller
             ->get()
             ->groupBy('employee_id');
 
-        $presentEmployeesList = Employee::with('department')->whereIn('id', $todayRecordEmpIds)->get()->map(function ($emp) use ($todayPunches) {
-            $punch = $todayPunches->get($emp->id)?->first();
-            $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
-            $emp->today_is_late = $punch ? $punch->is_late : false;
-            $emp->today_late_minutes = $punch ? $punch->late_minutes : 0;
-            return $emp;
-        });
-
-        $lateEmpIdsArray = AttendanceRecord::whereDate('event_time', $today)
-            ->where('is_late', true)
-            ->pluck('employee_id')
-            ->toArray();
-
-        $dayOfWeek = $today->dayOfWeekIso;
-
         $earlyEmpIdsArray = [];
+        $lateEntryEmpIdsArray = [];
+        $earlyExitEmpIdsArray = [];
+        $lateExitEmpIdsArray = [];
+        $lateEntryDetails = [];
+        $earlyExitDetails = [];
+        $lateExitDetails = [];
 
-        foreach ($presentEmployeesList as $emp) {
-            if (in_array($emp->id, $lateEmpIdsArray)) continue;
-
+        foreach ($totalEmployeesList as $emp) {
             $punches = $todayPunches->get($emp->id);
-            if (!$punches) continue;
-            
-            $firstPunch = clone $punches->first()->event_time;
-            $currentSchedule = $emp->currentSchedule();
-            
-            if ($currentSchedule) {
-                $dayConfig = clone $currentSchedule->days->where('day_of_week', $dayOfWeek)->first();
-                if ($dayConfig && $dayConfig->is_working_day && $dayConfig->entry_time) {
-                    $schEntry = \Carbon\Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->entry_time);
-                    $tolerance = $currentSchedule->tolerance_minutes;
-                    $earlyLimit = $schEntry->copy()->subMinutes($tolerance);
-
-                    // Si marcó antes del horario menos tolerancia
-                    if ($firstPunch->lt($earlyLimit)) {
-                        $earlyEmpIdsArray[] = $emp->id;
-                    }
-                }
+            if (!$punches || $punches->isEmpty()) {
+                continue;
             }
 
-            if ($punches->count() < 2) continue; // Necesita al menos 2 marcaciones para evaluar salida
-
-            $firstPunch = clone $punches->first()->event_time;
-            $lastPunch = clone $punches->last()->event_time;
-            
-            // Si la diferencia es menor a 30 mins, no lo contamos como salida válida (evita doble marcación rápida)
-            if ($firstPunch->diffInMinutes($lastPunch) < 30) continue;
-
             $currentSchedule = $emp->currentSchedule();
-            
-            if ($currentSchedule) {
-                $dayConfig = clone $currentSchedule->days->where('day_of_week', $dayOfWeek)->first();
-                
-                if ($dayConfig && $dayConfig->is_working_day && $dayConfig->exit_time) {
-                    $schExit = \Carbon\Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->exit_time);
-                    $tolerance = $currentSchedule->tolerance_minutes;
+            $dayConfig = $currentSchedule ? $currentSchedule->days->where('day_of_week', $dayOfWeek)->first() : null;
+            $tolerance = $currentSchedule ? ($currentSchedule->tolerance_minutes ?? 5) : 5;
 
-                    // Límite inferior (salió muy temprano)
-                    $earlyLimit = $schExit->copy()->subMinutes($tolerance);
-                    // Límite superior (salió muy tarde)
-                    $lateLimit = $schExit->copy()->addMinutes($tolerance);
+            $firstPunch = $punches->first();
+            $firstPunchTime = clone $firstPunch->event_time;
 
-                    if ($lastPunch->lt($earlyLimit) || $lastPunch->gt($lateLimit)) {
-                        $lateEmpIdsArray[] = $emp->id;
+            // 1. Evaluación de Entrada (Puntual / Anticipado / Tardanza de Entrada)
+            $isLateEntry = false;
+            $lateEntryMinutes = 0;
+
+            if ($dayConfig && $dayConfig->is_working_day && $dayConfig->entry_time) {
+                $schEntry = \Carbon\Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->entry_time);
+                $earlyLimit = $schEntry->copy()->subMinutes($tolerance);
+                $lateLimit = $schEntry->copy()->addMinutes($tolerance);
+
+                if ($firstPunchTime->lt($earlyLimit)) {
+                    $earlyEmpIdsArray[] = $emp->id;
+                } elseif ($firstPunchTime->gt($lateLimit) || $firstPunch->is_late) {
+                    $isLateEntry = true;
+                    $lateEntryMinutes = abs((int) $firstPunchTime->diffInMinutes($schEntry));
+                }
+            } elseif ($firstPunch->is_late) {
+                $isLateEntry = true;
+                $lateEntryMinutes = abs((int) ($firstPunch->late_minutes ?? 0));
+            }
+
+            if ($isLateEntry) {
+                $lateEntryEmpIdsArray[] = $emp->id;
+                $lateEntryDetails[$emp->id] = [
+                    'entry_time' => $firstPunchTime->format('h:i A'),
+                    'minutes' => $lateEntryMinutes,
+                ];
+            }
+
+            // 2. Evaluación de Salidas (Anticipada y Tarde)
+            if ($punches->count() >= 2) {
+                $lastPunch = $punches->last();
+                // Debe haber al menos 30 minutos entre la 1ra y última marcación para considerarse salida válida
+                if ($firstPunchTime->diffInMinutes($lastPunch->event_time) >= 30) {
+                    $exitPunch = $lastPunch;
+
+                    if ($dayConfig && $dayConfig->is_working_day && $dayConfig->exit_time) {
+                        $schExit = \Carbon\Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->exit_time);
+                        $lateExitLimit = $schExit->copy()->addMinutes($tolerance);
+
+                        // A. Salida Anticipada (marcó salida antes de su horario de salida programado)
+                        if ($exitPunch->event_time->lt($schExit)) {
+                            $earlyExitEmpIdsArray[] = $emp->id;
+                            $earlyExitMinutes = abs((int) $schExit->diffInMinutes($exitPunch->event_time));
+                            $earlyExitDetails[$emp->id] = [
+                                'exit_time' => $exitPunch->event_time->format('h:i A'),
+                                'minutes' => $earlyExitMinutes,
+                            ];
+                        }
+                        // B. Salida Tarde (marcó salida después de su horario más la tolerancia)
+                        elseif ($exitPunch->event_time->gt($lateExitLimit)) {
+                            $lateExitEmpIdsArray[] = $emp->id;
+                            $lateExitMinutes = abs((int) $exitPunch->event_time->diffInMinutes($schExit));
+                            $lateExitDetails[$emp->id] = [
+                                'exit_time' => $exitPunch->event_time->format('h:i A'),
+                                'minutes' => $lateExitMinutes,
+                            ];
+                        }
                     }
                 }
             }
         }
-        
-        $lateEmpIdsArray = array_unique($lateEmpIdsArray);
-        $lateEmpIds = collect($lateEmpIdsArray);
-        
-        // Actualizar el KPI de la tarjeta superior
-        $lateTodayCount = $lateEmpIds->count();
 
-            
-        $lateEmployeesList = Employee::with('department')->whereIn('id', $lateEmpIds)->get()->map(function ($emp) use ($todayPunches) {
+        // Asegurar que registros de BD con is_late se incluyan en tardanzas de entrada
+        $dbLateEmpIds = AttendanceRecord::whereDate('event_time', $today)
+            ->where('is_late', true)
+            ->pluck('employee_id')
+            ->unique()
+            ->toArray();
+
+        foreach ($dbLateEmpIds as $dbLateId) {
+            if (!in_array($dbLateId, $lateEntryEmpIdsArray)) {
+                $lateEntryEmpIdsArray[] = $dbLateId;
+            }
+        }
+
+        // Formatear listas y contadores de tarjetas
+        $earlyEmpIds = array_unique($earlyEmpIdsArray);
+        $earlyTodayCount = count($earlyEmpIds);
+        $earlyEmployeesList = Employee::with('department')->whereIn('id', $earlyEmpIds)->get()->map(function ($emp) use ($todayPunches) {
             $punch = $todayPunches->get($emp->id)?->first();
             $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
+            return $emp;
+        });
+
+        $lateEmpIds = array_unique($lateEntryEmpIdsArray);
+        $lateTodayCount = count($lateEmpIds);
+        $lateEmployeesList = Employee::with('department')->whereIn('id', $lateEmpIds)->get()->map(function ($emp) use ($todayPunches, $lateEntryDetails) {
+            $punch = $todayPunches->get($emp->id)?->first();
+            $emp->today_punch_time = $lateEntryDetails[$emp->id]['entry_time'] ?? ($punch ? $punch->event_time->format('h:i A') : '--:--');
             $emp->today_is_late = true;
-            $emp->today_late_minutes = $punch ? $punch->late_minutes : 0;
+            $emp->today_late_minutes = $lateEntryDetails[$emp->id]['minutes'] ?? ($punch ? abs((int)$punch->late_minutes) : 0);
+            return $emp;
+        });
+
+        $earlyExitEmpIds = array_unique($earlyExitEmpIdsArray);
+        $earlyExitTodayCount = count($earlyExitEmpIds);
+        $earlyExitEmployeesList = Employee::with('department')->whereIn('id', $earlyExitEmpIds)->get()->map(function ($emp) use ($todayPunches, $earlyExitDetails) {
+            $punch = $todayPunches->get($emp->id)?->first();
+            $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
+            $emp->today_exit_time = $earlyExitDetails[$emp->id]['exit_time'] ?? '--:--';
+            $emp->today_early_exit_minutes = $earlyExitDetails[$emp->id]['minutes'] ?? 0;
+            return $emp;
+        });
+
+        $lateExitEmpIds = array_unique($lateExitEmpIdsArray);
+        $lateExitTodayCount = count($lateExitEmpIds);
+        $lateExitEmployeesList = Employee::with('department')->whereIn('id', $lateExitEmpIds)->get()->map(function ($emp) use ($todayPunches, $lateExitDetails) {
+            $punch = $todayPunches->get($emp->id)?->first();
+            $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
+            $emp->today_exit_time = $lateExitDetails[$emp->id]['exit_time'] ?? '--:--';
+            $emp->today_late_exit_minutes = $lateExitDetails[$emp->id]['minutes'] ?? 0;
+            return $emp;
+        });
+
+        $presentEmployeesList = Employee::with('department')->whereIn('id', $todayRecordEmpIds)->get()->map(function ($emp) use ($todayPunches, $lateEntryEmpIdsArray, $lateEntryDetails) {
+            $punch = $todayPunches->get($emp->id)?->first();
+            $isLate = in_array($emp->id, $lateEntryEmpIdsArray);
+            $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
+            $emp->today_is_late = $isLate;
+            $emp->today_late_minutes = $isLate ? ($lateEntryDetails[$emp->id]['minutes'] ?? ($punch ? abs((int)$punch->late_minutes) : 0)) : 0;
             return $emp;
         });
 
@@ -192,22 +278,14 @@ class DashboardController extends Controller
             ->whereNotIn('id', $todayRecordEmpIds)
             ->get();
 
-        $earlyEmpIdsArray = array_unique($earlyEmpIdsArray);
-        $earlyEmpIds = collect($earlyEmpIdsArray);
-        $earlyTodayCount = $earlyEmpIds->count();
-
-        $earlyEmployeesList = Employee::with('department')->whereIn('id', $earlyEmpIds)->get()->map(function ($emp) use ($todayPunches) {
-            $punch = $todayPunches->get($emp->id)?->first();
-            $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
-            return $emp;
-        });
-
         return view('dashboard', compact(
             'targetDate',
             'totalEmployees',
             'presentCount',
             'absentCount',
             'lateTodayCount',
+            'earlyExitTodayCount',
+            'lateExitTodayCount',
             'earlyTodayCount',
             'devices',
             'devicesData',
@@ -217,6 +295,8 @@ class DashboardController extends Controller
             'earlyEmployeesList',
             'presentEmployeesList',
             'lateEmployeesList',
+            'earlyExitEmployeesList',
+            'lateExitEmployeesList',
             'absentEmployeesList'
         ));
     }

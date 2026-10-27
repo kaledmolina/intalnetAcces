@@ -21,9 +21,9 @@
     </div>
 
     <!-- Black & White High Contrast KPI Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <!-- Anticipados Hoy -->
-        <div id="card-early" onclick="showKpiDetails('early')" class="kpi-card cursor-pointer bw-card bw-card-hover p-6 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+        <div id="card-early" onclick="showKpiDetails('early')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Anticipados Hoy</span>
                 <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
@@ -40,7 +40,7 @@
         </div>
 
         <!-- Presentes Hoy -->
-        <div id="card-present" onclick="showKpiDetails('present')" class="kpi-card cursor-pointer bw-card bw-card-hover p-6 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+        <div id="card-present" onclick="showKpiDetails('present')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Presentes Hoy</span>
                 <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
@@ -58,7 +58,7 @@
         </div>
 
         <!-- Tardanzas Hoy -->
-        <div id="card-late" onclick="showKpiDetails('late')" class="kpi-card cursor-pointer bw-card bw-card-hover p-6 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+        <div id="card-late" onclick="showKpiDetails('late')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Tardanzas Hoy</span>
                 <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
@@ -67,15 +67,49 @@
             </div>
             <div>
                 <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $lateTodayCount }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Marcaciones tras tolerancia</span>
+                <span class="text-xs text-slate-500 block mt-1 font-semibold">Ingresos tras tolerancia</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
                 <div class="bg-slate-700 h-full rounded-full" style="width: {{ min(100, $lateTodayCount * 20) }}%"></div>
             </div>
         </div>
 
-        <!-- Pendientes -->
-        <div id="card-absent" onclick="showKpiDetails('absent')" class="kpi-card cursor-pointer bw-card bw-card-hover p-6 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+        <!-- Salida Anticipada -->
+        <div id="card-early-exit" onclick="showKpiDetails('early_exit')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Salida Anticipada</span>
+                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
+                    <i data-lucide="door-open" class="w-5 h-5"></i>
+                </div>
+            </div>
+            <div>
+                <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $earlyExitTodayCount }}</span>
+                <span class="text-xs text-slate-500 block mt-1 font-semibold">Salidas antes del horario</span>
+            </div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
+                <div class="bg-slate-700 h-full rounded-full" style="width: {{ min(100, $earlyExitTodayCount * 20) }}%"></div>
+            </div>
+        </div>
+
+        <!-- Salidas Tarde -->
+        <div id="card-late-exit" onclick="showKpiDetails('late_exit')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Salidas Tarde</span>
+                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+            </div>
+            <div>
+                <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $lateExitTodayCount }}</span>
+                <span class="text-xs text-slate-500 block mt-1 font-semibold">Salidas tras tolerancia</span>
+            </div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
+                <div class="bg-slate-700 h-full rounded-full" style="width: {{ min(100, $lateExitTodayCount * 20) }}%"></div>
+            </div>
+        </div>
+
+        <!-- Sin Registrar -->
+        <div id="card-absent" onclick="showKpiDetails('absent')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Sin Registrar</span>
                 <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
@@ -294,6 +328,8 @@
     const earlyEmployeesData = @json($earlyEmployeesList);
     const presentEmployeesData = @json($presentEmployeesList);
     const lateEmployeesData = @json($lateEmployeesList);
+    const earlyExitEmployeesData = @json($earlyExitEmployeesList);
+    const lateExitEmployeesData = @json($lateExitEmployeesList);
     const absentEmployeesData = @json($absentEmployeesList);
 
     window.showKpiDetails = function(type) {
@@ -318,7 +354,8 @@
             data = earlyEmployeesData;
             title = 'Personal Anticipado Hoy';
             iconName = 'sun';
-            document.getElementById('card-early').classList.add('ring-2', 'ring-black', 'border-black');
+            const cardEl = document.getElementById('card-early');
+            if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
             stateBadgeGenerator = (emp) => `<span class="bg-black text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-black inline-flex items-center shadow-sm">
                 <i data-lucide="sun" class="w-3 h-3 mr-1 text-white"></i> Entrada: ${emp.today_punch_time}
             </span>`;
@@ -326,7 +363,8 @@
             data = presentEmployeesData;
             title = 'Personal Presente Hoy';
             iconName = 'user-check';
-            document.getElementById('card-present').classList.add('ring-2', 'ring-black', 'border-black');
+            const cardEl = document.getElementById('card-present');
+            if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
             stateBadgeGenerator = (emp) => {
                 if (emp.today_is_late) {
                     return `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400 inline-flex items-center">
@@ -340,17 +378,43 @@
             };
         } else if (type === 'late') {
             data = lateEmployeesData;
-            title = 'Personal con Tardanza Hoy';
+            title = 'Personal con Tardanza Hoy (Entrada)';
             iconName = 'clock';
-            document.getElementById('card-late').classList.add('ring-2', 'ring-black', 'border-black');
+            const cardEl = document.getElementById('card-late');
+            if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
             stateBadgeGenerator = (emp) => `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400 inline-flex items-center">
                 <i data-lucide="clock" class="w-3 h-3 mr-1 text-slate-700"></i> Entrada: ${emp.today_punch_time} (+${emp.today_late_minutes} min)
+            </span>`;
+        } else if (type === 'early_exit') {
+            data = earlyExitEmployeesData;
+            title = 'Personal con Salida Anticipada Hoy';
+            iconName = 'door-open';
+            const cardEl = document.getElementById('card-early-exit');
+            if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
+            stateBadgeGenerator = (emp) => {
+                const mins = emp.today_early_exit_minutes || 0;
+                const timeText = mins >= 60 
+                    ? `(-${Math.floor(mins / 60)}h ${mins % 60}m)`
+                    : `(-${mins} min)`;
+                return `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400 inline-flex items-center">
+                    <i data-lucide="door-open" class="w-3 h-3 mr-1 text-slate-700"></i> Salida: ${emp.today_exit_time} ${timeText}
+                </span>`;
+            };
+        } else if (type === 'late_exit') {
+            data = lateExitEmployeesData;
+            title = 'Personal con Salida Tarde Hoy';
+            iconName = 'log-out';
+            const cardEl = document.getElementById('card-late-exit');
+            if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
+            stateBadgeGenerator = (emp) => `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400 inline-flex items-center">
+                <i data-lucide="log-out" class="w-3 h-3 mr-1 text-slate-700"></i> Salida: ${emp.today_exit_time} (+${emp.today_late_exit_minutes} min)
             </span>`;
         } else if (type === 'absent') {
             data = absentEmployeesData;
             title = 'Personal Sin Registrar Hoy (Falta)';
             iconName = 'user-minus';
-            document.getElementById('card-absent').classList.add('ring-2', 'ring-black', 'border-black');
+            const cardEl = document.getElementById('card-absent');
+            if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
             stateBadgeGenerator = (emp) => `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400">Sin marcación de entrada</span>`;
         }
 

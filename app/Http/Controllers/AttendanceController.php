@@ -102,7 +102,7 @@ class AttendanceController extends Controller
         return redirect()->route('attendance.index')->with('success', 'Marcación de prueba registrada con éxito.');
     }
 
-    public function exportCsv(Request $request): StreamedResponse
+    public function exportCsv(Request $request)
     {
         $query = AttendanceRecord::with(['employee', 'device']);
 
@@ -121,43 +121,18 @@ class AttendanceController extends Controller
 
         $records = $query->latest('event_time')->get();
 
-        $response = new StreamedResponse(function () use ($records) {
-            $handle = fopen('php://output', 'w');
+        $fileName = 'Reporte_Asistencia_' . now()->format('Y-m-d_H-i') . '.xlsx';
 
-            // BOM para Excel UTF-8
-            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            // Encabezados
-            fputcsv($handle, [
-                'ID Empleado',
-                'Nombre Empleado',
-                'Fecha y Hora Marcación',
-                'Huellero / Ubicación',
-                'Tardanza',
-                'Minutos Tardanza',
-                'Tarjeta ID',
-            ]);
-
-            foreach ($records as $record) {
-                fputcsv($handle, [
-                    $record->employee_no,
-                    $record->employee ? $record->employee->name : 'N/A',
-                    $record->event_time->format('d/m/Y H:i:s'),
-                    $record->device ? $record->device->name : 'Desconocido',
-                    $record->is_late ? 'SI' : 'NO',
-                    $record->late_minutes,
-                    $record->card_no ?? 'N/A',
-                ]);
-            }
-
-            fclose($handle);
+        return (new \Rap2hpoutre\FastExcel\FastExcel($records))->download($fileName, function ($record) {
+            return [
+                'ID Empleado' => $record->employee_no,
+                'Nombre Empleado' => $record->employee ? $record->employee->name : 'N/A',
+                'Fecha y Hora Marcación' => $record->event_time->format('d/m/Y H:i:s'),
+                'Huellero / Ubicación' => $record->device ? $record->device->name : 'Desconocido',
+                'Tardanza' => $record->is_late ? 'SI' : 'NO',
+                'Minutos Tardanza' => $record->late_minutes,
+                'Tarjeta ID' => $record->card_no ?? 'N/A',
+            ];
         });
-
-        $fileName = 'Reporte_Asistencia_' . now()->format('Y-m-d_H-i') . '.csv';
-
-        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
-        $response->headers->set('Content-Disposition', "attachment; filename=\"{$fileName}\"");
-
-        return $response;
     }
 }
