@@ -9,6 +9,7 @@ use App\Models\Schedule;
 use App\Models\EmployeeSchedule;
 use App\Services\HikvisionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeController extends Controller
 {
@@ -185,12 +186,36 @@ class EmployeeController extends Controller
 
     public function importFromDevices(HikvisionService $hikvisionService)
     {
-        $result = $hikvisionService->importUsersFromAllDevices();
+        try {
+            $devices = Device::all();
+            if ($devices->isEmpty()) {
+                return redirect()->route('employees.index')->with(
+                    'error',
+                    'No hay dispositivos huelleros configurados para importar empleados.'
+                );
+            }
 
-        return redirect()->route('employees.index')->with(
-            'success',
-            "Importación desde Huelleros finalizada: {$result['imported']} empleados importados nuevos, {$result['updated']} nombres actualizados."
-        );
+            $result = $hikvisionService->importUsersFromAllDevices();
+
+            if ($result['imported'] === 0 && $result['updated'] === 0) {
+                return redirect()->route('employees.index')->with(
+                    'error',
+                    'No se encontraron nuevos usuarios en los huelleros (o los dispositivos no respondieron en la red).'
+                );
+            }
+
+            return redirect()->route('employees.index')->with(
+                'success',
+                "Importación desde Huelleros finalizada: {$result['imported']} empleados importados nuevos, {$result['updated']} nombres actualizados."
+            );
+        } catch (\Throwable $e) {
+            Log::error('Error en importFromDevices: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            return redirect()->route('employees.index')->with(
+                'error',
+                'Ocurrió un error al importar empleados desde los huelleros: ' . $e->getMessage()
+            );
+        }
     }
 
     public function show(Request $request, Employee $employee)

@@ -19,11 +19,14 @@ class HikvisionService
      */
     protected function getClient(Device $device): Client
     {
-        $baseUrl = "{$device->protocol}://{$device->ip_address}:{$device->port}";
+        $protocol = !empty($device->protocol) ? $device->protocol : 'http';
+        $port = !empty($device->port) ? (int) $device->port : 80;
+        $ip = trim($device->ip_address ?? '');
+        $baseUrl = "{$protocol}://{$ip}:{$port}";
 
         return new Client([
             'base_uri' => $baseUrl,
-            'auth' => [$device->username, $device->password, 'digest'],
+            'auth' => [$device->username ?? 'admin', $device->password ?? '', 'digest'],
             'verify' => false,
             'timeout' => 8,
             'connect_timeout' => 4,
@@ -232,25 +235,47 @@ class HikvisionService
                     'json' => $payload,
                 ]);
 
-                $data = json_decode($response->getBody()->getContents(), true);
+                $rawBody = $response->getBody()->getContents();
+                $data = json_decode($rawBody, true);
+
+                if (!is_array($data)) {
+                    break;
+                }
+
                 $users = $data['UserInfoSearch']['UserInfo'] ?? [];
 
                 if (empty($users)) {
                     break;
                 }
 
-                $allUsers = array_merge($allUsers, $users);
-                $position += count($users);
+                // Normalización: Si Hikvision devuelve un solo usuario como objeto asociativo
+                if (isset($users['employeeNo']) || isset($users['employeeNoString'])) {
+                    $users = [$users];
+                }
+
+                $batchCount = 0;
+                foreach ($users as $u) {
+                    if (is_array($u)) {
+                        $allUsers[] = $u;
+                        $batchCount++;
+                    }
+                }
+
+                if ($batchCount === 0) {
+                    break;
+                }
+
+                $position += $batchCount;
 
                 // Si retorna menos usuarios que el límite, hemos terminado
-                if (count($users) < $limit) {
+                if ($batchCount < $limit) {
                     break;
                 }
             } while (true);
 
             return $allUsers;
-        } catch (\Exception $e) {
-            Log::error("Error al buscar usuarios en {$device->name}: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error("Error al buscar usuarios en {$device->name} ({$device->ip_address}): " . $e->getMessage());
             return [];
         }
     }
@@ -269,6 +294,10 @@ class HikvisionService
             $users = $this->getUsersFromDevice($device);
 
             foreach ($users as $u) {
+                if (!is_array($u)) {
+                    continue;
+                }
+
                 $employeeNo = $u['employeeNo'] ?? $u['employeeNoString'] ?? null;
 
                 if (!$employeeNo) {
@@ -277,12 +306,19 @@ class HikvisionService
 
                 $name = !empty($u['name']) ? $u['name'] : "Empleado #" . $employeeNo;
 
-                $employee = Employee::where('employee_no', (string) $employeeNo)
-                    ->orWhere('document_id', (string) $employeeNo)
+                // Buscar de forma segura sin romper por scopes
+                $employee = Employee::withoutGlobalScopes()
+                    ->where(function ($q) use ($employeeNo) {
+                        $q->where('employee_no', (string) $employeeNo)
+                          ->orWhere('document_id', (string) $employeeNo);
+                    })
                     ->first();
+
+                $currentUserId = auth()->id() ?? ($device->user_id ?? 1);
 
                 if (!$employee) {
                     $employee = Employee::create([
+                        'user_id' => $currentUserId,
                         'employee_no' => (string) $employeeNo,
                         'name' => $name,
                         'is_active' => true,
@@ -299,14 +335,21 @@ class HikvisionService
 
                     $importedCount++;
                 } else {
-                    if (!empty($u['name']) && $employee->name !== $u['name']) {
-                        $employee->update([
-                            'name' => $u['name'],
-                            'has_fingerprint' => true,
-                        ]);
-                        $updatedCount++;
-                    }
+                    $employee->update([
+                        'name' => !empty($u['name']) ? $u['name'] : $employee->name,
+                        'has_fingerprint' => true,
+                    ]);
+                    $updatedCount++;
                 }
+            }
+        }
+
+        // Si estamos en la versión de PC de escritorio, enviar de inmediato los empleados nuevos a la nube
+        if (config('nativephp-internal.running') || env('NATIVEPHP_RUNNING', false)) {
+            try {
+                app(\App\Services\CloudSyncService::class)->push();
+            } catch (\Throwable $t) {
+                Log::warning('Error sincronizando empleados importados a la nube: ' . $t->getMessage());
             }
         }
 
