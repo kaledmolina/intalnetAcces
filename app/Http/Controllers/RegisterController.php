@@ -14,6 +14,12 @@ class RegisterController extends Controller
      */
     public function showRegistrationForm()
     {
+        if (config('nativephp-internal.running') || env('NATIVEPHP_RUNNING', false)) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'El registro se gestiona de forma centralizada por el Superadmin en la nube: https://access.intalnet.com',
+            ]);
+        }
+
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
@@ -25,6 +31,11 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
+        if (config('nativephp-internal.running') || env('NATIVEPHP_RUNNING', false)) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'El registro local está deshabilitado en esta estación de escritorio.',
+            ]);
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',

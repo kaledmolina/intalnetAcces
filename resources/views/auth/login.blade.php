@@ -116,10 +116,16 @@
 
             <!-- Register Link -->
             <div class="pt-2 text-center border-t border-slate-100">
-                <p class="text-xs font-semibold text-slate-600">
-                    ¿No tienes una cuenta? 
-                    <a href="{{ route('register') }}" class="font-extrabold text-black hover:underline">Regístrate aquí</a>
-                </p>
+                @if(config('nativephp-internal.running') || env('NATIVEPHP_RUNNING', false))
+                    <p class="text-[11px] font-medium text-slate-500">
+                        Los accesos a esta estación son autorizados por el Superadmin desde <a href="https://access.intalnet.com" target="_blank" class="font-bold text-black hover:underline">access.intalnet.com</a>
+                    </p>
+                @else
+                    <p class="text-xs font-semibold text-slate-600">
+                        ¿No tienes una cuenta? 
+                        <a href="{{ route('register') }}" class="font-extrabold text-black hover:underline">Regístrate aquí</a>
+                    </p>
+                @endif
             </div>
         </form>
     </div>

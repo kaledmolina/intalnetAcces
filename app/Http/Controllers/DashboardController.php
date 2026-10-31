@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceRecord;
 use App\Models\Device;
 use App\Models\Employee;
+use App\Services\CloudSyncService;
 use App\Services\HikvisionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -301,21 +303,58 @@ class DashboardController extends Controller
         ));
     }
 
-    public function sync(Request $request, HikvisionService $hikvisionService)
+    public function sync(Request $request, HikvisionService $hikvisionService, CloudSyncService $cloudSyncService)
     {
         $results = $hikvisionService->syncAllDevices();
 
         $totalNew = array_sum(array_column($results, 'new_events'));
 
+        $cloudResult = null;
+        $isDesktop = config('nativephp-internal.running') || env('NATIVEPHP_RUNNING', false);
+        if ($isDesktop) {
+            try {
+                // Enviar inmediatamente las marcaciones recolectadas a la nube
+                $cloudResult = $cloudSyncService->push();
+            } catch (\Throwable $e) {
+                Log::warning('Error sincronizando marcaciones con la nube tras ISAPI: ' . $e->getMessage());
+            }
+        }
+
+        $cloudText = '';
+        if ($cloudResult) {
+            $cloudText = !empty($cloudResult['success']) 
+                ? ' y sincronizadas con la nube (access.intalnet.com).' 
+                : ' (Marcaciones guardadas localmente. La nube no respondió).';
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'new_events' => $totalNew,
+                'cloud_synced' => (bool) ($cloudResult['success'] ?? false),
                 'synced_at' => now()->format('d/m/Y, H:i:s'),
-                'message' => "Sincronización completada. {$totalNew} marcaciones nuevas."
+                'message' => "Sincronización completada. {$totalNew} marcaciones nuevas{$cloudText}"
             ]);
         }
 
-        return redirect()->back()->with('success', "Sincronización completada. Se procesaron {$totalNew} marcaciones reales desde ISAPI.");
+        return redirect()->back()->with('success', "Sincronización completada. Se procesaron {$totalNew} marcaciones reales desde ISAPI{$cloudText}");
+    }
+
+    /**
+     * Sincronización manual bidireccional con la nube central (access.intalnet.com).
+     */
+    public function cloudSync(Request $request, CloudSyncService $cloudSyncService)
+    {
+        $result = $cloudSyncService->sync();
+
+        if ($request->wantsJson()) {
+            return response()->json($result);
+        }
+
+        if (!empty($result['success'])) {
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        return redirect()->back()->with('error', $result['message']);
     }
 }

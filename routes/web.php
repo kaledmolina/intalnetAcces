@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
     // Rutas protegidas contra edición por monitores (Solo Lectura)
     Route::middleware('readonly')->group(function () {
         Route::post('/dashboard/sync', [DashboardController::class, 'sync'])->name('dashboard.sync');
+        Route::post('/dashboard/cloud-sync', [DashboardController::class, 'cloudSync'])->name('dashboard.cloud-sync');
 
         // Empleados, Captura de Huella, Confirmación, Sondeo y Importación ISAPI
         Route::post('/employees/{employee}/notes', [EmployeeController::class, 'saveNote'])->name('employees.notes.save');
@@ -77,6 +78,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
     Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
     Route::get('/backups/download', [BackupController::class, 'download'])->name('backups.download');
+
+    // Descarga del Instalador de Escritorio para PCs en Red Local
+    Route::get('/download-desktop', function () {
+        if ($downloadUrl = env('DESKTOP_DOWNLOAD_URL')) {
+            return redirect()->away($downloadUrl);
+        }
+
+        $publicPath = public_path('downloads/IntalnetAcces-1.0.0-setup.exe');
+        if (file_exists($publicPath)) {
+            return response()->download($publicPath, 'IntalnetAcces-1.0.0-setup.exe');
+        }
+
+        $distPath = base_path('nativephp/electron/dist/IntalnetAcces-1.0.0-setup.exe');
+        if (file_exists($distPath)) {
+            return response()->download($distPath, 'IntalnetAcces-1.0.0-setup.exe');
+        }
+
+        return redirect()->route('dashboard')->with('error', 'El instalador de escritorio aún no está disponible para descarga en este servidor. Contacte al administrador.');
+    })->name('desktop.download');
 
     // Administración de Usuarios y Sedes (Solo Superadmin)
     Route::middleware('superadmin')->group(function () {

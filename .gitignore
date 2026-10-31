@@ -26,3 +26,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /scratch
+/nativephp/binaries
+/nativephp/electron/dist
+/nativephp/electron/node_modules

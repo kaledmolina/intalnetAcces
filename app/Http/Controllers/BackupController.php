@@ -14,7 +14,10 @@ class BackupController extends Controller
      */
     protected function getDatabasePath()
     {
-        return config('database.connections.sqlite.database');
+        $default = config('database.default', 'sqlite');
+        return config("database.connections.{$default}.database")
+            ?? config('database.connections.sqlite.database')
+            ?? database_path('database.sqlite');
     }
 
     /**
