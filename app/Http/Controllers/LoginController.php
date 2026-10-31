@@ -56,7 +56,11 @@ class LoginController extends Controller
 
                 // 2. Si la nube deniega el acceso (usuario no existe, clave incorrecta o desactivado por el Superadmin)
                 if (!$response->successful() || empty($data['success'])) {
-                    $errorMessage = $data['message'] ?? 'Acceso denegado. Este usuario no está autorizado en la nube central (access.intalnet.com).';
+                    if ($response->status() === 404) {
+                        $errorMessage = 'La ruta de verificación en la nube (access.intalnet.com) aún no está activa. Ejecuta "git pull" y "php artisan route:clear" en el servidor web.';
+                    } else {
+                        $errorMessage = $data['message'] ?? 'Acceso denegado. Este usuario no está autorizado en la nube central (access.intalnet.com).';
+                    }
                     return back()->withErrors(['email' => $errorMessage])->onlyInput('email');
                 }
 
