@@ -336,6 +336,7 @@ class HikvisionService
                     $importedCount++;
                 } else {
                     $employee->update([
+                        'user_id' => $currentUserId,
                         'name' => !empty($u['name']) ? $u['name'] : $employee->name,
                         'has_fingerprint' => true,
                     ]);

@@ -13,6 +13,12 @@ trait BelongsToTenant
     {
         // 1. Global Scope: Filtrar por tenant/sede excepto si es Superadmin o si no está autenticado
         static::addGlobalScope('tenant', function (Builder $builder) {
+            // En la aplicación de escritorio (NativePHP), la base de datos es local de esta PC/oficina,
+            // por lo que los empleados y dispositivos locales siempre deben ser visibles para el usuario autenticado.
+            if (config('nativephp-internal.running') || env('NATIVEPHP_RUNNING')) {
+                return;
+            }
+
             if (auth()->check() && !auth()->user()->is_superadmin) {
                 $user = auth()->user();
 

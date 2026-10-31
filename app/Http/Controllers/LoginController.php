@@ -95,6 +95,9 @@ class LoginController extends Controller
                 Auth::login($localUser, $remember);
                 $request->session()->regenerate();
 
+                // Asegurar que los empleados existentes en esta PC queden asociados al usuario activo
+                \App\Models\Employee::withoutGlobalScopes()->update(['user_id' => $localUser->id]);
+
                 // 6. Almacenar el token de sincronización de la nube e importar datos iniciales
                 if (!empty($data['sync_token'])) {
                     $cloudSyncService = app(\App\Services\CloudSyncService::class);
