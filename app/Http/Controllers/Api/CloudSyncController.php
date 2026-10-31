@@ -77,14 +77,26 @@ class CloudSyncController extends Controller
                 foreach ($request->input('schedules', []) as $schData) {
                     if (empty($schData['name'])) continue;
 
-                    $schedule = Schedule::withoutGlobalScopes()->updateOrCreate(
-                        ['user_id' => $user->id, 'name' => $schData['name']],
-                        [
+                    $schedule = Schedule::withoutGlobalScopes()
+                        ->where('user_id', $user->id)
+                        ->where('name', $schData['name'])
+                        ->first();
+
+                    if (!$schedule) {
+                        $schedule = Schedule::create([
+                            'user_id' => $user->id,
+                            'name' => $schData['name'],
                             'tolerance_minutes' => (int) ($schData['tolerance_minutes'] ?? 5),
                             'is_default' => (bool) ($schData['is_default'] ?? false),
                             'check_break_tardiness' => (bool) ($schData['check_break_tardiness'] ?? false),
-                        ]
-                    );
+                        ]);
+                    } else {
+                        $schedule->update([
+                            'tolerance_minutes' => (int) ($schData['tolerance_minutes'] ?? $schedule->tolerance_minutes),
+                            'is_default' => (bool) ($schData['is_default'] ?? $schedule->is_default),
+                            'check_break_tardiness' => (bool) ($schData['check_break_tardiness'] ?? $schedule->check_break_tardiness),
+                        ]);
+                    }
 
                     if (!empty($schData['days']) && is_array($schData['days'])) {
                         foreach ($schData['days'] as $day) {
@@ -121,10 +133,22 @@ class CloudSyncController extends Controller
                         $scheduleId = $sch?->id;
                     }
 
-                    Department::withoutGlobalScopes()->updateOrCreate(
-                        ['user_id' => $user->id, 'name' => $deptData['name']],
-                        ['schedule_id' => $scheduleId]
-                    );
+                    $dept = Department::withoutGlobalScopes()
+                        ->where('user_id', $user->id)
+                        ->where('name', $deptData['name'])
+                        ->first();
+
+                    if (!$dept) {
+                        $dept = Department::create([
+                            'user_id' => $user->id,
+                            'name' => $deptData['name'],
+                            'schedule_id' => $scheduleId,
+                        ]);
+                    } else {
+                        $dept->update([
+                            'schedule_id' => $scheduleId ?? $dept->schedule_id,
+                        ]);
+                    }
                     $counts['departments']++;
                 }
             }
@@ -143,9 +167,14 @@ class CloudSyncController extends Controller
                         $deptId = $dept?->id;
                     }
 
-                    Employee::withoutGlobalScopes()->updateOrCreate(
-                        ['user_id' => $user->id, 'employee_no' => (string) $empData['employee_no']],
-                        [
+                    $employee = Employee::withoutGlobalScopes()
+                        ->where('employee_no', (string) $empData['employee_no'])
+                        ->first();
+
+                    if (!$employee) {
+                        Employee::create([
+                            'user_id' => $user->id,
+                            'employee_no' => (string) $empData['employee_no'],
                             'name' => $empData['name'] ?? 'Sin Nombre',
                             'document_id' => $empData['document_id'] ?? null,
                             'department_id' => $deptId,
@@ -154,8 +183,20 @@ class CloudSyncController extends Controller
                             'email' => $empData['email'] ?? null,
                             'is_active' => isset($empData['is_active']) ? (bool) $empData['is_active'] : true,
                             'has_fingerprint' => (bool) ($empData['has_fingerprint'] ?? false),
-                        ]
-                    );
+                        ]);
+                    } else {
+                        $employee->update([
+                            'user_id' => $user->id,
+                            'name' => $empData['name'] ?? $employee->name,
+                            'document_id' => $empData['document_id'] ?? $employee->document_id,
+                            'department_id' => $deptId ?? $employee->department_id,
+                            'position' => $empData['position'] ?? $employee->position,
+                            'phone' => $empData['phone'] ?? $employee->phone,
+                            'email' => $empData['email'] ?? $employee->email,
+                            'is_active' => isset($empData['is_active']) ? (bool) $empData['is_active'] : $employee->is_active,
+                            'has_fingerprint' => (bool) ($empData['has_fingerprint'] ?? $employee->has_fingerprint),
+                        ]);
+                    }
                     $counts['employees']++;
                 }
             }
@@ -165,10 +206,16 @@ class CloudSyncController extends Controller
                 foreach ($request->input('devices', []) as $devData) {
                     if (empty($devData['ip_address'])) continue;
 
-                    Device::withoutGlobalScopes()->updateOrCreate(
-                        ['user_id' => $user->id, 'ip_address' => $devData['ip_address']],
-                        [
+                    $device = Device::withoutGlobalScopes()
+                        ->where('user_id', $user->id)
+                        ->where('ip_address', $devData['ip_address'])
+                        ->first();
+
+                    if (!$device) {
+                        Device::create([
+                            'user_id' => $user->id,
                             'name' => $devData['name'] ?? 'Huellero ' . $devData['ip_address'],
+                            'ip_address' => $devData['ip_address'],
                             'port' => (int) ($devData['port'] ?? 80),
                             'protocol' => $devData['protocol'] ?? 'http',
                             'username' => $devData['username'] ?? 'admin',
@@ -176,8 +223,19 @@ class CloudSyncController extends Controller
                             'location' => $devData['location'] ?? null,
                             'status' => $devData['status'] ?? 'offline',
                             'last_sync_at' => !empty($devData['last_sync_at']) ? Carbon::parse($devData['last_sync_at']) : now(),
-                        ]
-                    );
+                        ]);
+                    } else {
+                        $device->update([
+                            'name' => $devData['name'] ?? $device->name,
+                            'port' => (int) ($devData['port'] ?? $device->port),
+                            'protocol' => $devData['protocol'] ?? $device->protocol,
+                            'username' => $devData['username'] ?? $device->username,
+                            'password' => $devData['password'] ?? $device->password,
+                            'location' => $devData['location'] ?? $device->location,
+                            'status' => $devData['status'] ?? $device->status,
+                            'last_sync_at' => !empty($devData['last_sync_at']) ? Carbon::parse($devData['last_sync_at']) : $device->last_sync_at,
+                        ]);
+                    }
                     $counts['devices']++;
                 }
             }
@@ -188,7 +246,6 @@ class CloudSyncController extends Controller
                     if (empty($rec['employee_no']) || empty($rec['event_time'])) continue;
 
                     $employee = Employee::withoutGlobalScopes()
-                        ->where('user_id', $user->id)
                         ->where('employee_no', (string) $rec['employee_no'])
                         ->first();
 
@@ -202,23 +259,38 @@ class CloudSyncController extends Controller
 
                     $parsedEventTime = Carbon::parse($rec['event_time'])->format('Y-m-d H:i:s');
 
-                    AttendanceRecord::withoutGlobalScopes()->updateOrCreate(
-                        [
+                    $attendanceRecord = AttendanceRecord::withoutGlobalScopes()
+                        ->where('employee_no', (string) $rec['employee_no'])
+                        ->where('event_time', $parsedEventTime)
+                        ->first();
+
+                    if (!$attendanceRecord) {
+                        AttendanceRecord::create([
                             'user_id' => $user->id,
-                            'employee_no' => (string) $rec['employee_no'],
-                            'event_time' => $parsedEventTime,
-                        ],
-                        [
                             'employee_id' => $employee?->id,
                             'device_id' => $device?->id,
+                            'employee_no' => (string) $rec['employee_no'],
+                            'event_time' => $parsedEventTime,
                             'card_no' => $rec['card_no'] ?? null,
                             'attendance_type' => $rec['attendance_type'] ?? 'auto',
                             'is_late' => (bool) ($rec['is_late'] ?? false),
                             'late_minutes' => (int) ($rec['late_minutes'] ?? 0),
                             'hikvision_event_id' => $rec['hikvision_event_id'] ?? null,
                             'raw_data' => $rec['raw_data'] ?? null,
-                        ]
-                    );
+                        ]);
+                    } else {
+                        $attendanceRecord->update([
+                            'user_id' => $user->id,
+                            'employee_id' => $employee?->id ?? $attendanceRecord->employee_id,
+                            'device_id' => $device?->id ?? $attendanceRecord->device_id,
+                            'card_no' => $rec['card_no'] ?? $attendanceRecord->card_no,
+                            'attendance_type' => $rec['attendance_type'] ?? $attendanceRecord->attendance_type,
+                            'is_late' => (bool) ($rec['is_late'] ?? $attendanceRecord->is_late),
+                            'late_minutes' => (int) ($rec['late_minutes'] ?? $attendanceRecord->late_minutes),
+                            'hikvision_event_id' => $rec['hikvision_event_id'] ?? $attendanceRecord->hikvision_event_id,
+                            'raw_data' => $rec['raw_data'] ?? $attendanceRecord->raw_data,
+                        ]);
+                    }
                     $counts['attendance_records']++;
                 }
             }

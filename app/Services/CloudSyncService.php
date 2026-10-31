@@ -84,9 +84,8 @@ class CloudSyncService
             $user = Auth::user();
             $userId = $user?->id;
 
-            // Recopilar horarios locales
+            // En la PC de escritorio, todos los horarios de la base local deben sincronizarse
             $schedules = Schedule::withoutGlobalScopes()
-                ->when($userId, fn($q) => $q->where('user_id', $userId))
                 ->with('days')
                 ->get()
                 ->map(function ($s) {
@@ -108,10 +107,9 @@ class CloudSyncService
                     ];
                 })->toArray();
 
-            // Recopilar departamentos locales
+            // En la PC de escritorio, todos los departamentos de la base local deben sincronizarse
             $departments = Department::withoutGlobalScopes()
-                ->when($userId, fn($q) => $q->where('user_id', $userId))
-                ->with('schedule')
+                ->with(['schedule' => fn($q) => $q->withoutGlobalScopes()])
                 ->get()
                 ->map(function ($d) {
                     return [
@@ -120,10 +118,9 @@ class CloudSyncService
                     ];
                 })->toArray();
 
-            // Recopilar empleados locales
+            // En la PC de escritorio, todos los empleados de la base local deben sincronizarse
             $employees = Employee::withoutGlobalScopes()
-                ->when($userId, fn($q) => $q->where('user_id', $userId))
-                ->with('department')
+                ->with(['department' => fn($q) => $q->withoutGlobalScopes()])
                 ->get()
                 ->map(function ($e) {
                     return [
@@ -139,9 +136,8 @@ class CloudSyncService
                     ];
                 })->toArray();
 
-            // Recopilar dispositivos huelleros configurados
+            // En la PC de escritorio, todos los huelleros configurados deben sincronizarse
             $devices = Device::withoutGlobalScopes()
-                ->when($userId, fn($q) => $q->where('user_id', $userId))
                 ->get()
                 ->map(function ($dev) {
                     return [
@@ -157,11 +153,10 @@ class CloudSyncService
                     ];
                 })->toArray();
 
-            // Recopilar marcaciones de los últimos 30 días
+            // En la PC de escritorio, todas las marcaciones de asistencia (últimos 60 días)
             $records = AttendanceRecord::withoutGlobalScopes()
-                ->when($userId, fn($q) => $q->where('user_id', $userId))
-                ->where('event_time', '>=', now()->subDays(30))
-                ->with('device')
+                ->where('event_time', '>=', now()->subDays(60))
+                ->with(['device' => fn($q) => $q->withoutGlobalScopes()])
                 ->get()
                 ->map(function ($rec) {
                     return [
@@ -179,9 +174,8 @@ class CloudSyncService
 
             // Recopilar notas de empleados
             $notes = EmployeeDailyNote::withoutGlobalScopes()
-                ->when($userId, fn($q) => $q->where('user_id', $userId))
-                ->where('date', '>=', now()->subDays(30)->format('Y-m-d'))
-                ->with('employee')
+                ->where('date', '>=', now()->subDays(60)->format('Y-m-d'))
+                ->with(['employee' => fn($q) => $q->withoutGlobalScopes()])
                 ->get()
                 ->map(function ($n) {
                     return [
