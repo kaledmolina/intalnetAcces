@@ -81,21 +81,31 @@ Route::middleware('auth')->group(function () {
 
     // Descarga del Instalador de Escritorio para PCs en Red Local
     Route::get('/download-desktop', function () {
+        // 1. URL personalizada en .env (Drive, CDN, servidor de descargas, etc.)
         if ($downloadUrl = env('DESKTOP_DOWNLOAD_URL')) {
             return redirect()->away($downloadUrl);
         }
 
-        $publicPath = public_path('downloads/IntalnetAcces-1.0.0-setup.exe');
-        if (file_exists($publicPath)) {
-            return response()->download($publicPath, 'IntalnetAcces-1.0.0-setup.exe');
+        // 2. Archivo físico alojado directamente en el servidor
+        $candidateFiles = [
+            public_path('downloads/IntalnetAcces-1.0.0-setup.exe'),
+            public_path('downloads/IntalnetAcces-setup.exe'),
+            public_path('downloads/IntalnetAcces.exe'),
+            public_path('downloads/IntalnetAcces-portable.exe'),
+            base_path('nativephp/electron/dist/IntalnetAcces-1.0.0-setup.exe'),
+        ];
+
+        foreach ($candidateFiles as $file) {
+            if (file_exists($file)) {
+                return response()->download($file, basename($file), [
+                    'Content-Type' => 'application/vnd.microsoft.portable-executable',
+                ]);
+            }
         }
 
-        $distPath = base_path('nativephp/electron/dist/IntalnetAcces-1.0.0-setup.exe');
-        if (file_exists($distPath)) {
-            return response()->download($distPath, 'IntalnetAcces-1.0.0-setup.exe');
-        }
-
-        return redirect()->route('dashboard')->with('error', 'El instalador de escritorio aún no está disponible para descarga en este servidor. Contacte al administrador.');
+        // 3. Redirección por defecto a GitHub Releases del repositorio
+        // Esto permite descargar el .exe directamente desde GitHub sin límites de tamaño de commit
+        return redirect()->away('https://github.com/kaledmolina/intalnetAcces/releases/latest/download/IntalnetAcces-1.0.0-setup.exe');
     })->name('desktop.download');
 
     // Administración de Usuarios y Sedes (Solo Superadmin)
