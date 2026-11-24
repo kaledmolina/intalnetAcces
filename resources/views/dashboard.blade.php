@@ -502,7 +502,7 @@
                                 ${initials}
                             </div>
                             <div>
-                                <p class="font-extrabold text-slate-900 leading-tight">${escapeHtml(emp.name)}</p>
+                                <p class="font-extrabold text-slate-900 leading-tight">${escapeHtml((emp.name || '').toUpperCase())}</p>
                                 <p class="text-[10px] text-slate-400 font-semibold mt-0.5">${escapeHtml(emp.position || 'Sin cargo')}</p>
                             </div>
                         </div>

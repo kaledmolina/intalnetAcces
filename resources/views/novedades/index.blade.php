@@ -487,7 +487,7 @@
                                     </div>
                                     <div>
                                         <p class="font-extrabold text-slate-900 leading-tight">
-                                            {{ $item['employee_name'] }}
+                                            {{ strtoupper($item['employee_name']) }}
                                         </p>
                                         <p class="text-xs text-slate-500 font-mono font-semibold mt-0.5">
                                             ID: #{{ $item['employee_no'] }} {{ !empty($item['document_id']) && $item['document_id'] !== 'N/A' ? '• CC: ' . $item['document_id'] : '' }}
@@ -705,7 +705,7 @@
                                 if (item.late_names.length > 0) {
                                     lines.push('');
                                     lines.push('⚠️ Llegaron Tarde:');
-                                    item.late_names.slice(0, 4).forEach(name => lines.push('  • ' + name));
+                                    item.late_names.slice(0, 4).forEach(name => lines.push('  • ' + name.toUpperCase()));
                                     if (item.late_names.length > 4) {
                                         lines.push(`  ... y ${item.late_names.length - 4} más`);
                                     }
@@ -714,7 +714,7 @@
                                 if (item.early_names.length > 0) {
                                     lines.push('');
                                     lines.push('🚪 Salieron Temprano:');
-                                    item.early_names.slice(0, 4).forEach(name => lines.push('  • ' + name));
+                                    item.early_names.slice(0, 4).forEach(name => lines.push('  • ' + name.toUpperCase()));
                                     if (item.early_names.length > 4) {
                                         lines.push(`  ... y ${item.early_names.length - 4} más`);
                                     }
