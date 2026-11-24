@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Models\AttendanceRecord;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\EmployeeDailyNote;
 use App\Models\Schedule;
 use App\Models\ScheduleDay;
 use App\Models\Sede;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -26,6 +28,13 @@ class McpAttendanceToolsTest extends TestCase
     private string $tokenB;
 
     private int $employeeAId;
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
 
     protected function setUp(): void
     {
@@ -173,6 +182,7 @@ class McpAttendanceToolsTest extends TestCase
             ['marcaciones_de_empleado', ['empleado' => '123456', 'desde' => self::FECHA, 'hasta' => self::FECHA]],
             ['buscar_empleado', ['texto' => 'Ana']],
             ['horario_de_empleado', ['empleado' => (string) $this->employeeAId]],
+            ['detalle_de_empleado', ['empleado' => (string) $this->employeeAId]],
         ];
 
         foreach ($llamadas as [$herramienta, $argumentos]) {
@@ -209,6 +219,193 @@ class McpAttendanceToolsTest extends TestCase
             'id' => 1,
             'method' => 'tools/list',
         ])->assertStatus(401);
+    }
+
+    public function test_no_se_puede_resolver_un_empleado_ajeno_por_documento(): void
+    {
+        $response = $this->callTool($this->tokenB, 'detalle_de_empleado', ['empleado' => '123456']);
+
+        $response->assertOk();
+        $response->assertJsonPath('result.structuredContent.total', 0);
+        $response->assertJsonMissing(['empleado' => 'Ana Pérez']);
+    }
+
+    public function test_herramientas_analiticas(): void
+    {
+        $schedule = Schedule::where('is_default', true)->firstOrFail();
+
+        foreach ([1, 2] as $dayOfWeek) {
+            ScheduleDay::create([
+                'schedule_id' => $schedule->id,
+                'day_of_week' => $dayOfWeek,
+                'is_working_day' => true,
+                'entry_time' => '08:00:00',
+                'break_start_time' => '12:00:00',
+                'break_end_time' => '13:00:00',
+                'exit_time' => '17:00:00',
+            ]);
+        }
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => self::FECHA.' 17:10:00',
+            'attendance_type' => 'check_out',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => '2026-11-16 08:05:00',
+            'attendance_type' => 'check_in',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        EmployeeDailyNote::create([
+            'employee_id' => $this->employeeAId,
+            'date' => '2026-11-17',
+            'note' => 'Permiso personal',
+            'user_id' => $this->userA->id,
+        ]);
+
+        $catalogo = $this->callTool($this->tokenA, 'catalogo_sedes_departamentos', []);
+        $catalogo->assertOk();
+        $catalogo->assertJsonPath('result.structuredContent.total', 2);
+        $catalogo->assertJsonFragment(['tipo' => 'sede', 'codigo' => 'SEDE-001']);
+        $catalogo->assertJsonFragment(['tipo' => 'departamento', 'nombre' => 'Operaciones', 'empleados_activos' => 1]);
+
+        $ranking = $this->callTool($this->tokenA, 'ranking_tardanzas', [
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $ranking->assertOk();
+        $ranking->assertJsonPath('result.structuredContent.total', 1);
+        $ranking->assertJsonPath('result.structuredContent.data.0.empleado', 'Ana Pérez');
+        $ranking->assertJsonPath('result.structuredContent.data.0.tardanzas', 1);
+        $ranking->assertJsonPath('result.structuredContent.data.0.minutos_tardanza', 20);
+        $ranking->assertJsonPath('result.structuredContent.data.0.variacion_tardanzas', 1);
+
+        $ausencias = $this->callTool($this->tokenA, 'ausencias_del_periodo', [
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $ausencias->assertOk();
+        $ausencias->assertJsonPath('result.structuredContent.total', 1);
+        $ausencias->assertJsonPath('result.structuredContent.data.0.fecha', '2026-11-17');
+        $ausencias->assertJsonPath('result.structuredContent.data.0.dia_semana', 'martes');
+        $ausencias->assertJsonPath('result.structuredContent.data.0.justificada', true);
+        $ausencias->assertJsonPath('result.structuredContent.data.0.nota', 'Permiso personal');
+
+        $incompletas = $this->callTool($this->tokenA, 'marcaciones_incompletas', [
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $incompletas->assertOk();
+        $incompletas->assertJsonPath('result.structuredContent.total', 1);
+        $incompletas->assertJsonPath('result.structuredContent.data.0.fecha', '2026-11-16');
+        $incompletas->assertJsonPath('result.structuredContent.data.0.problema', 'marcacion_unica');
+
+        $horas = $this->callTool($this->tokenA, 'horas_trabajadas', [
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $horas->assertOk();
+        $horas->assertJsonPath('result.structuredContent.data.0.minutos_trabajados', 470);
+        $horas->assertJsonPath('result.structuredContent.data.0.minutos_programados', 1440);
+        $horas->assertJsonPath('result.structuredContent.data.0.dias_sin_marcacion', 1);
+        $horas->assertJsonPath('result.structuredContent.data.0.dias_incompletos', 1);
+        $horas->assertJsonPath('result.structuredContent.data.0.diferencia_minutos', -970);
+
+        $detalle = $this->callTool($this->tokenA, 'detalle_de_empleado', ['empleado' => '123456']);
+        $detalle->assertOk();
+        $detalle->assertJsonPath('result.structuredContent.data.0.empleado', 'Ana Pérez');
+        $detalle->assertJsonPath('result.structuredContent.data.0.horario.jornada', 'Jornada');
+        $detalle->assertJsonPath('result.structuredContent.data.0.ultima_marcacion.tipo', 'check_out');
+        $detalle->assertJsonPath('result.structuredContent.data.0.tardanzas_mes_actual.total', 1);
+        $detalle->assertJsonPath('result.structuredContent.data.0.tardanzas_mes_actual.justificadas', 0);
+        $detalle->assertJsonPath('result.structuredContent.data.0.notas_recientes.0.nota', 'Permiso personal');
+
+        $export = $this->callTool($this->tokenA, 'exportar_reporte', [
+            'tipo' => 'tardanzas',
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $export->assertOk();
+        $export->assertJsonPath('result.structuredContent.formato', 'csv');
+        $export->assertJsonPath('result.structuredContent.filas', 1);
+        $this->assertStringContainsString('Ana Pérez', $export->json('result.structuredContent.csv'));
+        $this->assertStringContainsString('2026-11-20', $export->json('result.structuredContent.csv'));
+
+        $exportAusencias = $this->callTool($this->tokenA, 'exportar_reporte', [
+            'tipo' => 'ausencias',
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $exportAusencias->assertOk();
+        $this->assertStringContainsString('Permiso personal', $exportAusencias->json('result.structuredContent.csv'));
+    }
+
+    public function test_incidencias_del_periodo(): void
+    {
+        Carbon::setTestNow('2026-11-24 10:00:00');
+
+        $schedule = Schedule::where('is_default', true)->firstOrFail();
+
+        ScheduleDay::create([
+            'schedule_id' => $schedule->id,
+            'day_of_week' => 1,
+            'is_working_day' => true,
+            'entry_time' => '08:00:00',
+            'break_start_time' => '12:00:00',
+            'break_end_time' => '13:00:00',
+            'exit_time' => '17:00:00',
+        ]);
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => self::FECHA.' 17:10:00',
+            'attendance_type' => 'check_out',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => '2026-11-16 08:05:00',
+            'attendance_type' => 'check_in',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        $semana = $this->callTool($this->tokenA, 'incidencias_del_periodo', ['periodo' => '7_dias']);
+
+        $semana->assertOk();
+        $semana->assertJsonPath('result.structuredContent.periodo.desde', '2026-11-18');
+        $semana->assertJsonPath('result.structuredContent.periodo.hasta', '2026-11-24');
+        $semana->assertJsonPath('result.structuredContent.tardanzas.total_empleados', 1);
+        $semana->assertJsonPath('result.structuredContent.tardanzas.total_veces', 1);
+        $semana->assertJsonPath('result.structuredContent.tardanzas.data.0.empleado', 'Ana Pérez');
+        $semana->assertJsonPath('result.structuredContent.tardanzas.data.0.veces', 1);
+        $semana->assertJsonPath('result.structuredContent.sin_salida.total_empleados', 0);
+
+        $mes = $this->callTool($this->tokenA, 'incidencias_del_periodo', ['periodo' => 'mes']);
+
+        $mes->assertOk();
+        $mes->assertJsonPath('result.structuredContent.periodo.desde', '2026-11-01');
+        $mes->assertJsonPath('result.structuredContent.tardanzas.total_veces', 1);
+        $mes->assertJsonPath('result.structuredContent.sin_salida.total_empleados', 1);
+        $mes->assertJsonPath('result.structuredContent.sin_salida.total_veces', 1);
+        $mes->assertJsonPath('result.structuredContent.sin_salida.data.0.empleado', 'Ana Pérez');
+        $mes->assertJsonPath('result.structuredContent.sin_salida.data.0.dias.0.fecha', '2026-11-16');
     }
 
     private function callTool(string $token, string $tool, array $arguments): TestResponse

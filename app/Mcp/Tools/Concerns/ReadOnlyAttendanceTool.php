@@ -4,15 +4,28 @@ namespace App\Mcp\Tools\Concerns;
 
 use App\Mcp\Support\AttendanceQueries;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Tool;
 
 abstract class ReadOnlyAttendanceTool extends Tool
 {
+    protected function ensureMaxRange(string $desde, string $hasta, int $maxDays = 92): void
+    {
+        $days = Carbon::parse($desde)->diffInDays(Carbon::parse($hasta)) + 1;
+
+        if ($days > $maxDays) {
+            throw ValidationException::withMessages([
+                'hasta' => 'El rango no puede superar los '.$maxDays.' días.',
+            ]);
+        }
+    }
+
     protected function queries(): AttendanceQueries
     {
         $user = auth()->user();
