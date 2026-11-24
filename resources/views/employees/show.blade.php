@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', strtoupper($employee->name) . ' - Detalle Empleado')
+@section('title', $employee->display_name . ' - Detalle Empleado')
 @section('page-header', 'Perfil de Empleado')
 @section('page-sub-header', 'Historial de marcaciones y horario asignado')
 
@@ -11,11 +11,11 @@
     <div class="bw-card p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white border border-slate-200 shadow-sm">
         <div class="flex items-center space-x-4">
             <div class="w-16 h-16 rounded-2xl bg-black flex items-center justify-center font-heading font-extrabold text-2xl text-white shadow-md">
-                {{ strtoupper(substr($employee->name, 0, 2)) }}
+                {{ $employee->initials }}
             </div>
             <div>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight leading-none">{{ strtoupper($employee->name) }}</h2>
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight leading-none">{{ $employee->display_name }}</h2>
                     <span class="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200 font-bold self-start sm:self-auto">
                         ID: #{{ $employee->employee_no }}
                     </span>

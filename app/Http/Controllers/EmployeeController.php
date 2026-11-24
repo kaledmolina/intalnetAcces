@@ -100,7 +100,7 @@ class EmployeeController extends Controller
             }
         }
 
-        return redirect()->route('employees.index')->with('success', "Empleado {$employee->name} (#{$employee->employee_no}) registrado con éxito.");
+        return redirect()->route('employees.index')->with('success', "Empleado {$employee->display_name} (#{$employee->employee_no}) registrado con éxito.");
     }
 
     public function captureFingerprint(Request $request, HikvisionService $hikvisionService)

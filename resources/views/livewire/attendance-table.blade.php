@@ -54,11 +54,11 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-9 h-9 rounded-xl bg-black font-extrabold text-white text-xs flex items-center justify-center">
-                                        {{ strtoupper(substr($record->employee ? $record->employee->name : $record->employee_no, 0, 2)) }}
+                                        {{ $record->employee ? $record->employee->initials : strtoupper(substr($record->employee_no, 0, 2)) }}
                                     </div>
                                     <div>
                                         <p class="font-extrabold text-slate-900 leading-tight">
-                                            {{ $record->employee ? strtoupper($record->employee->name) : 'Empleado #' . $record->employee_no }}
+                                            {{ $record->employee?->display_name ?? 'Empleado #' . $record->employee_no }}
                                         </p>
                                         <p class="text-xs text-slate-500 font-mono font-semibold mt-0.5">ID: #{{ $record->employee_no }}</p>
                                     </div>

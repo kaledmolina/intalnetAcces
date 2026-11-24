@@ -298,11 +298,11 @@
                         <div class="flex items-center space-x-3 min-w-0">
                             <span class="font-black text-xs text-slate-400 w-4">#{{ $loop->iteration }}</span>
                             <div class="w-8 h-8 rounded-lg bg-black text-white text-xs font-black flex items-center justify-center shrink-0">
-                                {{ strtoupper(substr($data['employee']->name, 0, 2)) }}
+                                {{ $data['employee']->initials }}
                             </div>
                             <div class="min-w-0">
-                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ strtoupper($data['employee']->name) }}">
-                                    {{ strtoupper($data['employee']->name) }}
+                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ $data['employee']->display_name }}">
+                                    {{ $data['employee']->display_name }}
                                 </p>
                                 <p class="text-[10px] text-slate-500 font-medium truncate">
                                     {{ $data['employee']->department?->name ?? 'Sin Departamento' }}
@@ -349,11 +349,11 @@
                         <div class="flex items-center space-x-3 min-w-0">
                             <span class="font-black text-xs text-slate-400 w-4">#{{ $loop->iteration }}</span>
                             <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-900 border border-slate-300 text-xs font-black flex items-center justify-center shrink-0">
-                                {{ strtoupper(substr($data['employee']->name, 0, 2)) }}
+                                {{ $data['employee']->initials }}
                             </div>
                             <div class="min-w-0">
-                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ strtoupper($data['employee']->name) }}">
-                                    {{ strtoupper($data['employee']->name) }}
+                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ $data['employee']->display_name }}">
+                                    {{ $data['employee']->display_name }}
                                 </p>
                                 <p class="text-[10px] text-slate-500 font-medium truncate">
                                     {{ $data['employee']->department?->name ?? 'Sin Departamento' }}
@@ -483,11 +483,11 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-9 h-9 rounded-xl {{ $item['type'] === 'late' ? 'bg-black text-white' : 'bg-slate-800 text-white' }} font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
-                                        {{ strtoupper(substr($item['employee_name'], 0, 2)) }}
+                                        {{ substr($item['employee_name'], 0, 2) }}
                                     </div>
                                     <div>
                                         <p class="font-extrabold text-slate-900 leading-tight">
-                                            {{ strtoupper($item['employee_name']) }}
+                                            {{ $item['employee_name'] }}
                                         </p>
                                         <p class="text-xs text-slate-500 font-mono font-semibold mt-0.5">
                                             ID: #{{ $item['employee_no'] }} {{ !empty($item['document_id']) && $item['document_id'] !== 'N/A' ? '• CC: ' . $item['document_id'] : '' }}
@@ -705,7 +705,7 @@
                                 if (item.late_names.length > 0) {
                                     lines.push('');
                                     lines.push('⚠️ Llegaron Tarde:');
-                                    item.late_names.slice(0, 4).forEach(name => lines.push('  • ' + name.toUpperCase()));
+                                    item.late_names.slice(0, 4).forEach(name => lines.push('  • ' + name));
                                     if (item.late_names.length > 4) {
                                         lines.push(`  ... y ${item.late_names.length - 4} más`);
                                     }
@@ -714,7 +714,7 @@
                                 if (item.early_names.length > 0) {
                                     lines.push('');
                                     lines.push('🚪 Salieron Temprano:');
-                                    item.early_names.slice(0, 4).forEach(name => lines.push('  • ' + name.toUpperCase()));
+                                    item.early_names.slice(0, 4).forEach(name => lines.push('  • ' + name));
                                     if (item.early_names.length > 4) {
                                         lines.push(`  ... y ${item.early_names.length - 4} más`);
                                     }

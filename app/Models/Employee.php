@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EmployeeName;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +29,30 @@ class Employee extends Model
         'is_active' => 'boolean',
         'has_fingerprint' => 'boolean',
     ];
+
+    /**
+     * Campos de presentación incluidos también al serializar a JSON.
+     */
+    protected $appends = [
+        'display_name',
+        'initials',
+    ];
+
+    /**
+     * Nombre del empleado listo para mostrarse en la interfaz.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return EmployeeName::format($this->name);
+    }
+
+    /**
+     * Iniciales del empleado para avatares.
+     */
+    public function getInitialsAttribute(): string
+    {
+        return EmployeeName::initials($this->name);
+    }
 
     /**
      * Usuario dueño del empleado (de donde se deriva su sede).

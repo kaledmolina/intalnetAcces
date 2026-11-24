@@ -239,11 +239,11 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-9 h-9 rounded-xl bg-black font-extrabold text-white text-xs flex items-center justify-center">
-                                        {{ strtoupper(substr($emp->name, 0, 2)) }}
+                                        {{ $emp->initials }}
                                     </div>
                                     <div>
                                         <p class="font-extrabold text-slate-900 leading-tight">
-                                            {{ strtoupper($emp->name) }}
+                                            {{ $emp->display_name }}
                                         </p>
                                         <p class="text-xs text-slate-400 font-semibold mt-0.5">{{ $emp->position ?? 'Sin cargo' }}</p>
                                     </div>
@@ -492,7 +492,7 @@
                 const tr = document.createElement('tr');
                 tr.className = 'bg-white hover:bg-slate-50 transition-colors';
                 
-                const initials = emp.name.substring(0, 2).toUpperCase();
+                const initials = emp.initials;
                 const viewUrl = `/employees/${emp.id}?date=${encodeURIComponent(targetDateStr)}`;
 
                 tr.innerHTML = `
@@ -502,7 +502,7 @@
                                 ${initials}
                             </div>
                             <div>
-                                <p class="font-extrabold text-slate-900 leading-tight">${escapeHtml((emp.name || '').toUpperCase())}</p>
+                                <p class="font-extrabold text-slate-900 leading-tight">${escapeHtml(emp.display_name)}</p>
                                 <p class="text-[10px] text-slate-400 font-semibold mt-0.5">${escapeHtml(emp.position || 'Sin cargo')}</p>
                             </div>
                         </div>
