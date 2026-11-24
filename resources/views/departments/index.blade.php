@@ -131,7 +131,7 @@
                                 @forelse($employees as $emp)
                                     <label class="flex items-center p-2 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200">
                                         <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}" class="w-4 h-4 text-black bg-white border-slate-300 rounded focus:ring-black" {{ $emp->department_id == $department->id ? 'checked' : '' }}>
-                                        <span class="ml-3 text-sm font-bold text-slate-900">{{ $emp->name }}</span>
+                                        <span class="ml-3 text-sm font-bold text-slate-900">{{ strtoupper($emp->name) }}</span>
                                         <span class="ml-auto text-[10px] text-slate-400 font-mono">#{{ $emp->employee_no }}</span>
                                     </label>
                                 @empty

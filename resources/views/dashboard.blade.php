@@ -243,7 +243,7 @@
                                     </div>
                                     <div>
                                         <p class="font-extrabold text-slate-900 leading-tight">
-                                            {{ $emp->name }}
+                                            {{ strtoupper($emp->name) }}
                                         </p>
                                         <p class="text-xs text-slate-400 font-semibold mt-0.5">{{ $emp->position ?? 'Sin cargo' }}</p>
                                     </div>

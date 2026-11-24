@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $employee->name . ' - Detalle Empleado')
+@section('title', strtoupper($employee->name) . ' - Detalle Empleado')
 @section('page-header', 'Perfil de Empleado')
 @section('page-sub-header', 'Historial de marcaciones y horario asignado')
 
@@ -15,7 +15,7 @@
             </div>
             <div>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight leading-none">{{ $employee->name }}</h2>
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight leading-none">{{ strtoupper($employee->name) }}</h2>
                     <span class="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200 font-bold self-start sm:self-auto">
                         ID: #{{ $employee->employee_no }}
                     </span>

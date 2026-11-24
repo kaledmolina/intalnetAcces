@@ -64,7 +64,7 @@
                                         {{ strtoupper(substr($employee->name, 0, 2)) }}
                                     </div>
                                     <div class="space-y-1">
-                                        <p class="font-extrabold text-slate-900 text-sm leading-snug tracking-tight">{{ $employee->name }}</p>
+                                        <p class="font-extrabold text-slate-900 text-sm leading-snug tracking-tight">{{ strtoupper($employee->name) }}</p>
                                         <p class="text-xs text-slate-500 font-semibold flex items-center">
                                             <i data-lucide="contact" class="w-3.5 h-3.5 mr-1 text-slate-400"></i>
                                             Doc: {{ $employee->document_id ?? 'Sin documento' }}
@@ -118,7 +118,7 @@
                                         </a>
 
                                         <!-- Eliminar -->
-                                        <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('¿Eliminar al empleado {{ $employee->name }}?')" class="inline-block">
+                                        <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('¿Eliminar al empleado {{ strtoupper($employee->name) }}?')" class="inline-block">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-hover-grow inline-flex items-center justify-center gap-1.5 text-red-600 bg-white hover:bg-red-50 hover:text-red-700 border border-red-200 font-extrabold text-xs px-3 py-2 rounded-xl transition-all shadow-xs">

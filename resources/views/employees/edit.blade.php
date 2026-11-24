@@ -12,7 +12,7 @@
         <div class="flex items-center justify-between border-b border-slate-100 pb-4">
             <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center">
                 <i data-lucide="edit" class="w-4 h-4 mr-2 text-black"></i>
-                Empleado: {{ $employee->name }}
+                Empleado: {{ strtoupper($employee->name) }}
             </h3>
             <a href="{{ route('employees.show', $employee) }}" class="text-xs font-bold text-slate-500 hover:text-black transition-colors flex items-center">
                 <i data-lucide="arrow-left" class="w-3.5 h-3.5 mr-1"></i> Volver al Perfil

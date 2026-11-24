@@ -58,7 +58,7 @@
                                     </div>
                                     <div>
                                         <p class="font-extrabold text-slate-900 leading-tight">
-                                            {{ $record->employee ? $record->employee->name : 'Empleado #' . $record->employee_no }}
+                                            {{ $record->employee ? strtoupper($record->employee->name) : 'Empleado #' . $record->employee_no }}
                                         </p>
                                         <p class="text-xs text-slate-500 font-mono font-semibold mt-0.5">ID: #{{ $record->employee_no }}</p>
                                     </div>

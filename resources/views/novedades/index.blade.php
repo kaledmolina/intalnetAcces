@@ -301,8 +301,8 @@
                                 {{ strtoupper(substr($data['employee']->name, 0, 2)) }}
                             </div>
                             <div class="min-w-0">
-                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ $data['employee']->name }}">
-                                    {{ $data['employee']->name }}
+                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ strtoupper($data['employee']->name) }}">
+                                    {{ strtoupper($data['employee']->name) }}
                                 </p>
                                 <p class="text-[10px] text-slate-500 font-medium truncate">
                                     {{ $data['employee']->department?->name ?? 'Sin Departamento' }}
@@ -352,8 +352,8 @@
                                 {{ strtoupper(substr($data['employee']->name, 0, 2)) }}
                             </div>
                             <div class="min-w-0">
-                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ $data['employee']->name }}">
-                                    {{ $data['employee']->name }}
+                                <p class="text-xs font-extrabold text-slate-900 truncate" title="{{ strtoupper($data['employee']->name) }}">
+                                    {{ strtoupper($data['employee']->name) }}
                                 </p>
                                 <p class="text-[10px] text-slate-500 font-medium truncate">
                                     {{ $data['employee']->department?->name ?? 'Sin Departamento' }}
