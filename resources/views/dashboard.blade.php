@@ -21,18 +21,18 @@
     </div>
 
     <!-- Black & White High Contrast KPI Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
         <!-- Anticipados Hoy -->
-        <div id="card-early" onclick="showKpiDetails('early')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Anticipados Hoy</span>
-                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
-                    <i data-lucide="sun" class="w-5 h-5"></i>
+        <div id="card-early" onclick="showKpiDetails('early')" class="kpi-card cursor-pointer bw-card bw-card-hover p-4 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Anticipados Hoy</span>
+                <div class="p-2 bg-slate-100 text-slate-900 rounded-xl border border-slate-300 shrink-0">
+                    <i data-lucide="sun" class="w-4 h-4"></i>
                 </div>
             </div>
             <div>
                 <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $earlyTodayCount }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Ingresos antes del horario</span>
+                <span class="text-[11px] text-slate-500 block mt-1 font-semibold">Ingresos antes del horario</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
                 <div class="bg-black h-full w-full"></div>
@@ -40,16 +40,16 @@
         </div>
 
         <!-- Presentes Hoy -->
-        <div id="card-present" onclick="showKpiDetails('present')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Presentes Hoy</span>
-                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
-                    <i data-lucide="user-check" class="w-5 h-5"></i>
+        <div id="card-present" onclick="showKpiDetails('present')" class="kpi-card cursor-pointer bw-card bw-card-hover p-4 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Presentes Hoy</span>
+                <div class="p-2 bg-slate-100 text-slate-900 rounded-xl border border-slate-300 shrink-0">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
                 </div>
             </div>
             <div>
                 <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $presentCount }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Entradas verificadas</span>
+                <span class="text-[11px] text-slate-500 block mt-1 font-semibold">Entradas verificadas</span>
             </div>
             @php $presentPercent = $totalEmployees > 0 ? round(($presentCount / $totalEmployees) * 100) : 0; @endphp
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
@@ -58,16 +58,16 @@
         </div>
 
         <!-- Tardanzas Hoy -->
-        <div id="card-late" onclick="showKpiDetails('late')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Tardanzas Hoy</span>
-                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
-                    <i data-lucide="clock" class="w-5 h-5"></i>
+        <div id="card-late" onclick="showKpiDetails('late')" class="kpi-card cursor-pointer bw-card bw-card-hover p-4 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Tardanzas Hoy</span>
+                <div class="p-2 bg-slate-100 text-slate-900 rounded-xl border border-slate-300 shrink-0">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
                 </div>
             </div>
             <div>
                 <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $lateTodayCount }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Ingresos tras tolerancia</span>
+                <span class="text-[11px] text-slate-500 block mt-1 font-semibold">Ingresos tras tolerancia</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
                 <div class="bg-slate-700 h-full rounded-full" style="width: {{ min(100, $lateTodayCount * 20) }}%"></div>
@@ -75,16 +75,16 @@
         </div>
 
         <!-- Salida Anticipada -->
-        <div id="card-early-exit" onclick="showKpiDetails('early_exit')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Salida Anticipada</span>
-                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
-                    <i data-lucide="door-open" class="w-5 h-5"></i>
+        <div id="card-early-exit" onclick="showKpiDetails('early_exit')" class="kpi-card cursor-pointer bw-card bw-card-hover p-4 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Salida Anticipada</span>
+                <div class="p-2 bg-slate-100 text-slate-900 rounded-xl border border-slate-300 shrink-0">
+                    <i data-lucide="door-open" class="w-4 h-4"></i>
                 </div>
             </div>
             <div>
                 <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $earlyExitTodayCount }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Salidas antes del horario</span>
+                <span class="text-[11px] text-slate-500 block mt-1 font-semibold">Salidas antes del horario</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
                 <div class="bg-slate-700 h-full rounded-full" style="width: {{ min(100, $earlyExitTodayCount * 20) }}%"></div>
@@ -92,33 +92,51 @@
         </div>
 
         <!-- Salidas Tarde -->
-        <div id="card-late-exit" onclick="showKpiDetails('late_exit')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Salidas Tarde</span>
-                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
+        <div id="card-late-exit" onclick="showKpiDetails('late_exit')" class="kpi-card cursor-pointer bw-card bw-card-hover p-4 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Salidas Tarde</span>
+                <div class="p-2 bg-slate-100 text-slate-900 rounded-xl border border-slate-300 shrink-0">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
                 </div>
             </div>
             <div>
                 <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $lateExitTodayCount }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Salidas tras tolerancia</span>
+                <span class="text-[11px] text-slate-500 block mt-1 font-semibold">Salidas tras tolerancia</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
                 <div class="bg-slate-700 h-full rounded-full" style="width: {{ min(100, $lateExitTodayCount * 20) }}%"></div>
             </div>
         </div>
 
+        <!-- Sin Salida -->
+        <div id="card-missing-exit" onclick="showKpiDetails('missing_exit')" class="kpi-card cursor-pointer bw-card bw-card-hover p-4 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Sin Salida</span>
+                <div class="p-2 bg-slate-100 text-slate-900 rounded-xl border border-slate-300 shrink-0">
+                    <i data-lucide="clock-alert" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <div>
+                <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $missingExitCount }}</span>
+                <span class="text-[11px] text-slate-500 block mt-1 font-semibold">Sin registro de salida</span>
+            </div>
+            @php $missingExitPercent = $presentCount > 0 ? round(($missingExitCount / $presentCount) * 100) : 0; @endphp
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
+                <div class="bg-slate-700 h-full rounded-full transition-all duration-500" style="width: {{ $missingExitPercent }}%"></div>
+            </div>
+        </div>
+
         <!-- Sin Registrar -->
-        <div id="card-absent" onclick="showKpiDetails('absent')" class="kpi-card cursor-pointer bw-card bw-card-hover p-5 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Sin Registrar</span>
-                <div class="p-2.5 bg-slate-100 text-slate-900 rounded-xl border border-slate-300">
-                    <i data-lucide="user-minus" class="w-5 h-5"></i>
+        <div id="card-absent" onclick="showKpiDetails('absent')" class="kpi-card cursor-pointer bw-card bw-card-hover p-4 rounded-2xl space-y-3 bg-white border border-slate-200 transition-all duration-300">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">Sin Registrar</span>
+                <div class="p-2 bg-slate-100 text-slate-900 rounded-xl border border-slate-300 shrink-0">
+                    <i data-lucide="user-minus" class="w-4 h-4"></i>
                 </div>
             </div>
             <div>
                 <span class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">{{ $absentCount }}</span>
-                <span class="text-xs text-slate-500 block mt-1 font-semibold">Pendientes de ingreso</span>
+                <span class="text-[11px] text-slate-500 block mt-1 font-semibold">Pendientes de ingreso</span>
             </div>
             @php $absentPercent = $totalEmployees > 0 ? round(($absentCount / $totalEmployees) * 100) : 0; @endphp
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
@@ -129,7 +147,7 @@
 
     <!-- SECCIÓN INTERACTIVA: DETALLE DE PERSONAL SEGÚN KPI SELECCIONADO -->
     <div id="kpi-details-section" class="bw-card rounded-2xl overflow-hidden shadow-sm bg-white border border-slate-200 hidden transition-all duration-300">
-        <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="p-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50">
             <div>
                 <h3 class="font-heading text-sm font-black text-slate-900 uppercase tracking-wider flex items-center">
                     <i id="kpi-details-icon" data-lucide="users" class="w-4 h-4 mr-2 text-black"></i>
@@ -137,14 +155,19 @@
                 </h3>
                 <p id="kpi-details-subtitle" class="text-[11px] text-slate-500 font-semibold mt-0.5">Mostrando personal según la tarjeta seleccionada</p>
             </div>
-            <div class="flex flex-col sm:flex-row items-center gap-3">
-                <input type="text" id="kpi-search-input" onkeyup="filterKpiDetails()" placeholder="Filtrar por nombre..." class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-48 px-2.5 py-1.5 font-medium">
+            <div class="flex flex-wrap items-center gap-2.5">
+                <input type="text" id="kpi-search-input" onkeyup="filterKpiDetails()" placeholder="Filtrar por nombre..." class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black block w-44 px-2.5 py-1.5 font-medium">
                 
                 <form method="GET" action="{{ route('dashboard') }}" class="flex items-center space-x-2">
                     <input type="date" name="date" value="{{ $targetDate->format('Y-m-d') }}" class="bg-white border border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-black focus:border-black px-2.5 py-1.5 font-medium" onchange="this.form.submit()">
                 </form>
 
-                <button onclick="closeKpiDetails()" class="text-slate-400 hover:text-slate-600 transition-colors ml-2">
+                <a id="kpi-export-btn" href="{{ route('dashboard.export-kpi', ['date' => $targetDate->format('Y-m-d'), 'type' => 'missing_exit']) }}" class="text-white bg-black hover:bg-slate-800 font-extrabold rounded-lg text-xs px-3 py-1.5 inline-flex items-center space-x-1.5 shadow-sm whitespace-nowrap transition-colors">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-white"></i>
+                    <span>Exportar CSV</span>
+                </a>
+
+                <button onclick="closeKpiDetails()" class="text-slate-400 hover:text-slate-600 transition-colors ml-1">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -330,7 +353,20 @@
     const lateEmployeesData = @json($lateEmployeesList);
     const earlyExitEmployeesData = @json($earlyExitEmployeesList);
     const lateExitEmployeesData = @json($lateExitEmployeesList);
+    const missingExitEmployeesData = @json($missingExitEmployeesList);
     const absentEmployeesData = @json($absentEmployeesList);
+    const targetDateStr = "{{ $targetDate->format('Y-m-d') }}";
+    const exportBaseUrl = "{{ route('dashboard.export-kpi') }}";
+
+    const escapeHtml = (unsafe) => {
+        if (!unsafe) return '';
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
 
     window.showKpiDetails = function(type) {
         const section = document.getElementById('kpi-details-section');
@@ -338,7 +374,11 @@
         const iconEl = document.getElementById('kpi-details-icon');
         const bodyEl = document.getElementById('kpi-details-body');
         const searchInput = document.getElementById('kpi-search-input');
+        const exportBtn = document.getElementById('kpi-export-btn');
         if (searchInput) searchInput.value = '';
+        if (exportBtn) {
+            exportBtn.href = `${exportBaseUrl}?date=${encodeURIComponent(targetDateStr)}&type=${encodeURIComponent(type)}`;
+        }
         
         let data = [];
         let title = '';
@@ -409,13 +449,32 @@
             stateBadgeGenerator = (emp) => `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400 inline-flex items-center">
                 <i data-lucide="log-out" class="w-3 h-3 mr-1 text-slate-700"></i> Salida: ${emp.today_exit_time} (+${emp.today_late_exit_minutes} min)
             </span>`;
+        } else if (type === 'missing_exit') {
+            data = missingExitEmployeesData;
+            title = 'Personal Sin Registro de Salida';
+            iconName = 'clock-alert';
+            const cardEl = document.getElementById('card-missing-exit');
+            if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
+            stateBadgeGenerator = (emp) => {
+                const noteHtml = emp.today_note
+                    ? `<span class="block text-[10px] text-purple-700 font-bold mt-1">Nota: ${escapeHtml(emp.today_note)}</span>`
+                    : '';
+                return `<span class="bg-amber-50 text-amber-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-amber-300 inline-flex items-center">
+                    <i data-lucide="clock-alert" class="w-3 h-3 mr-1 text-amber-700"></i> Entrada: ${emp.today_punch_time} • Salida prog: ${emp.today_scheduled_exit || 'N/A'} (Sin Salida)
+                </span>${noteHtml}`;
+            };
         } else if (type === 'absent') {
             data = absentEmployeesData;
             title = 'Personal Sin Registrar Hoy (Falta)';
             iconName = 'user-minus';
             const cardEl = document.getElementById('card-absent');
             if (cardEl) cardEl.classList.add('ring-2', 'ring-black', 'border-black');
-            stateBadgeGenerator = (emp) => `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400">Sin marcación de entrada</span>`;
+            stateBadgeGenerator = (emp) => {
+                const noteHtml = emp.today_note
+                    ? `<span class="block text-[10px] text-purple-700 font-bold mt-1">Nota: ${escapeHtml(emp.today_note)}</span>`
+                    : '';
+                return `<span class="bg-slate-200 text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-slate-400">Sin marcación de entrada</span>${noteHtml}`;
+            };
         }
 
         // Renderizar filas
@@ -434,7 +493,7 @@
                 tr.className = 'bg-white hover:bg-slate-50 transition-colors';
                 
                 const initials = emp.name.substring(0, 2).toUpperCase();
-                const viewUrl = `/employees/${emp.id}`;
+                const viewUrl = `/employees/${emp.id}?date=${encodeURIComponent(targetDateStr)}`;
 
                 tr.innerHTML = `
                     <td class="px-6 py-3.5">
@@ -443,22 +502,22 @@
                                 ${initials}
                             </div>
                             <div>
-                                <p class="font-extrabold text-slate-900 leading-tight">${emp.name}</p>
-                                <p class="text-[10px] text-slate-400 font-semibold mt-0.5">${emp.position || 'Sin cargo'}</p>
+                                <p class="font-extrabold text-slate-900 leading-tight">${escapeHtml(emp.name)}</p>
+                                <p class="text-[10px] text-slate-400 font-semibold mt-0.5">${escapeHtml(emp.position || 'Sin cargo')}</p>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-3.5 whitespace-nowrap font-mono text-xs font-bold text-slate-700">
-                        #${emp.employee_no}
+                        #${escapeHtml(emp.employee_no)}
                     </td>
                     <td class="px-6 py-3.5 text-xs text-slate-600 font-semibold">
-                        ${emp.department ? emp.department.name : 'Sin departamento'}
+                        ${emp.department ? escapeHtml(emp.department.name) : 'Sin departamento'}
                     </td>
                     <td class="px-6 py-3.5 whitespace-nowrap">
                         ${stateBadgeGenerator(emp)}
                     </td>
                     <td class="px-6 py-3.5 whitespace-nowrap text-right">
-                        <a href="${viewUrl}" class="inline-flex items-center justify-center p-1.5 bg-black hover:bg-slate-800 text-white rounded-lg transition-colors shadow-sm" title="Ver Historial">
+                        <a href="${viewUrl}" class="inline-flex items-center justify-center p-1.5 bg-black hover:bg-slate-800 text-white rounded-lg transition-colors shadow-sm" title="Ver Historial / Seguimiento">
                             <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                         </a>
                     </td>

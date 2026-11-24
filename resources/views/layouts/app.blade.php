@@ -318,6 +318,11 @@
                         <span class="sidebar-text">Marcaciones</span>
                     </a>
 
+                    <a href="{{ route('novedades.index') }}" wire:navigate class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('novedades.*') ? 'bg-black text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}" title="Novedades">
+                        <i data-lucide="calendar-clock" class="w-5 h-5 flex-shrink-0"></i>
+                        <span class="sidebar-text">Novedades</span>
+                    </a>
+
                     <a href="{{ route('schedules.index') }}" wire:navigate class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('schedules.*') ? 'bg-black text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}" title="Horarios">
                         <i data-lucide="clock" class="w-5 h-5 flex-shrink-0"></i>
                         <span class="sidebar-text">Horarios</span>

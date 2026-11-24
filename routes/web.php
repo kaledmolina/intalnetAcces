@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\NoveltyController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\LoginController;
@@ -31,6 +32,7 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard y Perfil
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export-kpi', [DashboardController::class, 'exportKpi'])->name('dashboard.export-kpi');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/register-sede', [UserController::class, 'registerMySede'])->name('profile.register-sede');
 
@@ -75,6 +77,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/attendance/export', [AttendanceController::class, 'exportCsv'])->name('attendance.export');
+    Route::get('/novedades', [NoveltyController::class, 'index'])->name('novedades.index');
+    Route::get('/novedades/export', [NoveltyController::class, 'exportCsv'])->name('novedades.export');
     Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
     Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
     Route::get('/backups/download', [BackupController::class, 'download'])->name('backups.download');
