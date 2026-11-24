@@ -9,6 +9,7 @@ use App\Http\Controllers\NoveltyController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\McpTokenController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\UserController;
@@ -83,6 +84,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
     Route::get('/backups/download', [BackupController::class, 'download'])->name('backups.download');
 
+    // Conector MCP de autoservicio: cada usuario genera y revoca solo sus propios tokens
+    Route::get('/mi-mcp', [McpTokenController::class, 'selfIndex'])->name('mcp.self');
+    Route::post('/mi-mcp/tokens', [McpTokenController::class, 'selfStore'])->name('mcp.self.tokens.store');
+    Route::delete('/mi-mcp/tokens/{token}', [McpTokenController::class, 'selfDestroy'])->name('mcp.self.tokens.destroy');
+
     // Descarga del Instalador de Escritorio para PCs en Red Local
     Route::get('/download-desktop', function () {
         // 1. URL personalizada en .env (Drive, CDN, servidor de descargas, etc.)
@@ -118,5 +124,10 @@ Route::middleware('auth')->group(function () {
         Route::patch('/users/{user}/assign-sede', [UserController::class, 'assignSede'])->name('users.assign-sede');
         Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
         Route::resource('sedes', SedeController::class)->only(['store', 'update', 'destroy']);
+
+        // Integración MCP: tokens de solo lectura para clientes de IA
+        Route::get('/admin/mcp', [McpTokenController::class, 'index'])->name('mcp.index');
+        Route::post('/admin/mcp/tokens', [McpTokenController::class, 'store'])->name('mcp.tokens.store');
+        Route::delete('/admin/mcp/tokens/{token}', [McpTokenController::class, 'destroy'])->name('mcp.tokens.destroy');
     });
 });

@@ -333,6 +333,11 @@
                         <span class="sidebar-text">Huelleros ISAPI</span>
                     </a>
 
+                    <a href="{{ route('mcp.self') }}" wire:navigate class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('mcp.self*') ? 'bg-black text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}" title="Mi conector IA">
+                        <i data-lucide="bot" class="w-5 h-5 flex-shrink-0"></i>
+                        <span class="sidebar-text">Mi conector IA</span>
+                    </a>
+
                     @if(Auth::user()->is_superadmin)
                         <div class="pt-4 border-t border-slate-200 mt-4 space-y-1.5">
                             <span class="px-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Administración</span>
@@ -340,6 +345,11 @@
                             <a href="{{ route('users.index') }}" wire:navigate class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('users.*') ? 'bg-black text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}" title="Usuarios">
                                 <i data-lucide="user-cog" class="w-5 h-5 flex-shrink-0"></i>
                                 <span class="sidebar-text">Usuarios</span>
+                            </a>
+
+                            <a href="{{ route('mcp.index') }}" wire:navigate class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('mcp.*') ? 'bg-black text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}" title="Conectores IA (MCP)">
+                                <i data-lucide="bot" class="w-5 h-5 flex-shrink-0"></i>
+                                <span class="sidebar-text">Conectores IA</span>
                             </a>
 
                             <a href="{{ route('backups.index') }}" wire:navigate class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl {{ request()->routeIs('backups.*') ? 'bg-black text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}" title="Respaldos">

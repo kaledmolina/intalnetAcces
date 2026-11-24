@@ -2,16 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-
-use App\Traits\BelongsToTenant;
 
 class Employee extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
         'user_id',
@@ -30,6 +28,14 @@ class Employee extends Model
         'is_active' => 'boolean',
         'has_fingerprint' => 'boolean',
     ];
+
+    /**
+     * Usuario dueño del empleado (de donde se deriva su sede).
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Relación con asignación de horarios.
@@ -69,7 +75,7 @@ class Employee extends Model
         $activeAssign = $this->employeeSchedules()
             ->where(function ($q) {
                 $q->whereNull('end_date')
-                  ->orWhere('end_date', '>=', now()->toDateString());
+                    ->orWhere('end_date', '>=', now()->toDateString());
             })
             ->latest('start_date')
             ->first();
