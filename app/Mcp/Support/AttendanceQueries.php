@@ -82,12 +82,19 @@ class AttendanceQueries
         $entries = [];
         $sinMarcacion = 0;
         $sinHorario = 0;
+        $empleadosSinMarcacion = [];
 
         foreach ($employees as $employee) {
             $punches = $records->get($employee->id.'|'.$fecha);
 
             if (! $punches || $punches->isEmpty()) {
                 $sinMarcacion++;
+                $empleadosSinMarcacion[] = [
+                    'empleado' => $employee->name,
+                    'documento' => $employee->document_id,
+                    'sede' => $this->employeeSede($employee),
+                    'departamento' => $employee->department?->name,
+                ];
 
                 continue;
             }
@@ -163,6 +170,7 @@ class AttendanceQueries
                     'departamento' => $ultimo['departamento'],
                 ],
             ],
+            'empleados_sin_marcacion' => $empleadosSinMarcacion,
         ];
     }
 

@@ -249,6 +249,11 @@ class McpAttendanceToolsTest extends TestCase
         $response->assertJsonPath('result.structuredContent.resumen.empleados_considerados', 3);
         $response->assertJsonPath('result.structuredContent.resumen.con_marcacion', 2);
         $response->assertJsonPath('result.structuredContent.resumen.sin_marcacion', 1);
+        $response->assertJsonCount(1, 'result.structuredContent.empleados_sin_marcacion');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.empleado', 'Carla Ruiz');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.documento', '777777');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.sede', 'SEDE-001');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.departamento', 'Operaciones');
     }
 
     public function test_una_sede_no_administrada_devuelve_lista_vacia_y_mensaje(): void

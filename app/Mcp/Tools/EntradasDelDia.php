@@ -9,7 +9,7 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 
-#[Description('Primeras marcaciones del día de todos los empleados, ordenadas de la más temprana a la más tardía. Devuelve la hora de entrada de cada uno, su horario programado, la diferencia en minutos (negativa si llegó antes) y un resumen con quién llegó primero, quién llegó último y cuántos no marcaron. Úsala para responder "quién llegó primero", "a qué hora entró cada empleado" o "cuántos llegaron antes de su horario". Solo lectura.')]
+#[Description('Primeras marcaciones del día de todos los empleados, ordenadas de la más temprana a la más tardía. Devuelve la hora de entrada de cada uno, su horario programado, la diferencia en minutos (negativa si llegó antes) y un resumen con quién llegó primero, quién llegó último y cuántos no marcaron. Incluye además la lista de empleados sin marcación con nombre, sede y departamento. Úsala para responder "quién llegó primero", "a qué hora entró cada empleado", "cuántos llegaron antes de su horario" o "quién no ha llegado hoy". Solo lectura.')]
 class EntradasDelDia extends ReadOnlyAttendanceTool
 {
     protected string $name = 'entradas_del_dia';
