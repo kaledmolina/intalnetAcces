@@ -177,6 +177,7 @@ class McpAttendanceToolsTest extends TestCase
     {
         $llamadas = [
             ['tardanzas_del_dia', ['fecha' => self::FECHA]],
+            ['entradas_del_dia', ['fecha' => self::FECHA]],
             ['tardanzas_por_rango', ['desde' => self::FECHA, 'hasta' => self::FECHA]],
             ['resumen_asistencia_por_sede', ['fecha' => self::FECHA]],
             ['marcaciones_de_empleado', ['empleado' => '123456', 'desde' => self::FECHA, 'hasta' => self::FECHA]],
@@ -194,6 +195,60 @@ class McpAttendanceToolsTest extends TestCase
             $response->assertJsonMissing(['empleado' => 'Ana Pérez']);
             $response->assertJsonMissing(['sede' => 'SEDE-001']);
         }
+    }
+
+    public function test_entradas_del_dia_ordena_por_hora_y_identifica_al_primero(): void
+    {
+        $department = Department::where('name', 'Operaciones')->firstOrFail();
+
+        $employeeB = Employee::create([
+            'user_id' => $this->userA->id,
+            'employee_no' => 'E-102',
+            'name' => 'Beto Gómez',
+            'document_id' => '654321',
+            'department_id' => $department->id,
+            'is_active' => true,
+        ]);
+
+        Employee::create([
+            'user_id' => $this->userA->id,
+            'employee_no' => 'E-103',
+            'name' => 'Carla Ruiz',
+            'document_id' => '777777',
+            'department_id' => $department->id,
+            'is_active' => true,
+        ]);
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $employeeB->id,
+            'employee_no' => 'E-102',
+            'event_time' => self::FECHA.' 07:45:00',
+            'attendance_type' => 'check_in',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        $response = $this->callTool($this->tokenA, 'entradas_del_dia', ['fecha' => self::FECHA]);
+
+        $response->assertOk();
+        $response->assertJsonPath('result.structuredContent.total', 2);
+        $response->assertJsonPath('result.structuredContent.data.0.empleado', 'Beto Gómez');
+        $response->assertJsonPath('result.structuredContent.data.0.puesto', 1);
+        $response->assertJsonPath('result.structuredContent.data.0.es_primero', true);
+        $response->assertJsonPath('result.structuredContent.data.0.hora', '07:45:00');
+        $response->assertJsonPath('result.structuredContent.data.0.horario_entrada', '08:00:00');
+        $response->assertJsonPath('result.structuredContent.data.0.minutos_diferencia', -15);
+        $response->assertJsonPath('result.structuredContent.data.0.puntual', true);
+        $response->assertJsonPath('result.structuredContent.data.1.empleado', 'Ana Pérez');
+        $response->assertJsonPath('result.structuredContent.data.1.puesto', 2);
+        $response->assertJsonPath('result.structuredContent.data.1.minutos_diferencia', 20);
+        $response->assertJsonPath('result.structuredContent.data.1.puntual', false);
+        $response->assertJsonPath('result.structuredContent.resumen.primero.empleado', 'Beto Gómez');
+        $response->assertJsonPath('result.structuredContent.resumen.primero.hora', '07:45:00');
+        $response->assertJsonPath('result.structuredContent.resumen.empleados_considerados', 3);
+        $response->assertJsonPath('result.structuredContent.resumen.con_marcacion', 2);
+        $response->assertJsonPath('result.structuredContent.resumen.sin_marcacion', 1);
     }
 
     public function test_una_sede_no_administrada_devuelve_lista_vacia_y_mensaje(): void

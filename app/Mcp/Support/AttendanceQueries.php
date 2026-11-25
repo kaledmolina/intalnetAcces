@@ -48,6 +48,125 @@ class AttendanceQueries
     }
 
     /**
+     * Primeras marcaciones del día, de la más temprana a la más tardía.
+     *
+     * La hora de entrada es la primera marcación del empleado en la fecha;
+     * la diferencia se calcula contra la entrada programada de su horario
+     * vigente (negativa = llegó antes, positiva = llegó después).
+     *
+     * @return array<string, mixed>
+     */
+    public function entradasDelDia(
+        string $fecha,
+        ?string $sede,
+        ?string $departamento,
+        ?int $limite = null,
+    ): array {
+        $scope = $this->effectiveSede($sede);
+
+        if (! $scope['allowed']) {
+            return $this->denied();
+        }
+
+        $limite ??= self::MAX_ROWS;
+
+        $employees = $this->employeeQuery($scope['code'], $departamento)
+            ->orderBy('name')
+            ->get();
+
+        $defaultSchedule = Schedule::with('days')->where('is_default', true)->first();
+        $records = $this->recordsByEmployeeDay($employees->pluck('id')->all(), $fecha, $fecha);
+        $dayOfWeek = Carbon::parse($fecha)->dayOfWeekIso;
+        $timezone = config('app.timezone');
+
+        $entries = [];
+        $sinMarcacion = 0;
+        $sinHorario = 0;
+
+        foreach ($employees as $employee) {
+            $punches = $records->get($employee->id.'|'.$fecha);
+
+            if (! $punches || $punches->isEmpty()) {
+                $sinMarcacion++;
+
+                continue;
+            }
+
+            $first = $punches->sortBy('event_time')->first();
+            $entrada = $first->event_time->copy()->setTimezone($timezone);
+
+            $schedule = $this->scheduleFor($employee, $defaultSchedule);
+            $day = $schedule?->days?->first(fn ($item) => (int) $item->day_of_week === $dayOfWeek);
+            $horarioEntrada = ($day && $day->is_working_day) ? $day->entry_time : null;
+
+            $diferencia = null;
+
+            if ($horarioEntrada !== null) {
+                $programada = Carbon::parse($fecha.' '.$horarioEntrada, $timezone);
+                $diferencia = (int) $programada->diffInMinutes($entrada, false);
+            } else {
+                $sinHorario++;
+            }
+
+            $entries[] = [
+                'empleado_id' => $employee->id,
+                'empleado' => $employee->name,
+                'documento' => $employee->document_id,
+                'sede' => $this->employeeSede($employee),
+                'departamento' => $employee->department?->name,
+                'hora_entrada' => $this->iso($entrada),
+                'hora' => $entrada->format('H:i:s'),
+                'horario_entrada' => $horarioEntrada,
+                'minutos_diferencia' => $diferencia,
+                'puntual' => $diferencia === null ? null : $diferencia <= (int) ($schedule?->tolerance_minutes ?? 0),
+                'primera_marcacion' => $first->attendance_type,
+                '_timestamp' => $entrada->getTimestamp(),
+            ];
+        }
+
+        usort($entries, fn (array $a, array $b) => [$a['_timestamp'], $a['empleado']] <=> [$b['_timestamp'], $b['empleado']]);
+
+        $rows = [];
+
+        foreach ($entries as $index => $entry) {
+            unset($entry['_timestamp']);
+
+            $entry['puesto'] = $index + 1;
+            $entry['es_primero'] = $index === 0;
+
+            $rows[] = $entry;
+        }
+
+        $total = count($rows);
+        $primero = $rows[0] ?? null;
+        $ultimo = $total > 0 ? $rows[$total - 1] : null;
+
+        return [
+            ...$this->payload($rows, $total, 'No se encontraron marcaciones para la fecha indicada.', $limite),
+            'fecha' => $fecha,
+            'zona_horaria' => $timezone,
+            'resumen' => [
+                'empleados_considerados' => $employees->count(),
+                'con_marcacion' => $total,
+                'sin_marcacion' => $sinMarcacion,
+                'sin_horario' => $sinHorario,
+                'primero' => $primero === null ? null : [
+                    'empleado' => $primero['empleado'],
+                    'hora' => $primero['hora'],
+                    'sede' => $primero['sede'],
+                    'departamento' => $primero['departamento'],
+                ],
+                'ultimo' => $ultimo === null ? null : [
+                    'empleado' => $ultimo['empleado'],
+                    'hora' => $ultimo['hora'],
+                    'sede' => $ultimo['sede'],
+                    'departamento' => $ultimo['departamento'],
+                ],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function tardanzasPorRango(string $desde, string $hasta, ?string $sede, ?string $departamento): array

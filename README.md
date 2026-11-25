@@ -112,6 +112,7 @@ Expone consultas de asistencia a clientes de IA mediante el paquete oficial `lar
 | Herramienta | Parámetros | Devuelve |
 | --- | --- | --- |
 | `tardanzas_del_dia` | `fecha` (opcional, por defecto hoy), `sede` (opcional) | Empleado, sede, departamento, hora de entrada, minutos y justificada |
+| `entradas_del_dia` | `fecha` (opcional, por defecto hoy), `sede`, `departamento`, `limite` | Todos los empleados ordenados por su primera marcación, con horario, diferencia en minutos y resumen del primero/último |
 | `tardanzas_por_rango` | `desde`, `hasta` (obligatorios, máx. 92 días), `sede`, `departamento` | Detalle + `resumen_por_empleado` con total y minutos acumulados |
 | `resumen_asistencia_por_sede` | `fecha` o `desde`/`hasta` | Por sede: presentes, tardanzas, ausencias y minutos totales |
 | `marcaciones_de_empleado` | `empleado` (id, documento o número), `desde`, `hasta` | Solo hora, tipo de marcación y sede |

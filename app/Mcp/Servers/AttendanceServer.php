@@ -6,6 +6,7 @@ use App\Mcp\Tools\AusenciasDelPeriodo;
 use App\Mcp\Tools\BuscarEmpleado;
 use App\Mcp\Tools\CatalogoSedesDepartamentos;
 use App\Mcp\Tools\DetalleDeEmpleado;
+use App\Mcp\Tools\EntradasDelDia;
 use App\Mcp\Tools\ExportarReporte;
 use App\Mcp\Tools\HorarioDeEmpleado;
 use App\Mcp\Tools\HorasTrabajadas;
@@ -28,6 +29,7 @@ class AttendanceServer extends Server
 {
     protected array $tools = [
         TardanzasDelDia::class,
+        EntradasDelDia::class,
         TardanzasPorRango::class,
         ResumenAsistenciaPorSede::class,
         MarcacionesDeEmpleado::class,
