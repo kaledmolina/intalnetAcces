@@ -34,6 +34,8 @@
         </div>
     @endif
 
+    @include('mcp.partials.oauth')
+
     @unless($user->sede_id || $user->sede)
         <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800 text-xs font-bold flex items-start space-x-2">
             <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0"></i>
@@ -60,7 +62,7 @@
                     </div>
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
                         <p class="text-[10px] uppercase font-black text-slate-400 tracking-wider">Autenticación</p>
-                        <p class="font-mono text-xs font-bold text-slate-900 mt-1">Authorization: Bearer &lt;token&gt;</p>
+                        <p class="font-mono text-xs font-bold text-slate-900 mt-1">OAuth 2.1 o Authorization: Bearer &lt;token&gt;</p>
                     </div>
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:col-span-2">
                         <p class="text-[10px] uppercase font-black text-slate-400 tracking-wider">Sede asociada al token</p>
@@ -96,7 +98,7 @@
                         <span>ChatGPT</span>
                     </p>
                     <p class="text-[11px] text-slate-600 font-medium mt-1 leading-relaxed">
-                        ChatGPT solo admite OAuth o conexiones sin autenticación, no un Bearer estático. Este servidor usa tokens Sanctum; no uses la opción “sin autenticación”.
+                        Usa la conexión con inicio de sesión de arriba: pega la URL y elige «OAuth». ChatGPT se registra solo y te pedirá iniciar sesión; no uses «sin autenticación», porque dejaría los datos abiertos.
                     </p>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\OAuthRefreshToken;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -24,6 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Al revocar un token MCP (desde /mi-mcp o /admin/mcp) también se anula
+        // el refresh token OAuth que lo acompaña, para que no pueda renovarse.
+        PersonalAccessToken::deleting(function (PersonalAccessToken $token): void {
+            OAuthRefreshToken::where('personal_access_token_id', $token->getKey())->update(['revoked_at' => now()]);
+        });
+
         RateLimiter::for('mcp-token', function (Request $request) {
             $accessToken = $request->user()?->currentAccessToken();
             $tokenId = $accessToken instanceof PersonalAccessToken ? $accessToken->getKey() : null;

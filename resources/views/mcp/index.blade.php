@@ -2,7 +2,7 @@
 
 @section('title', 'Conectores IA (MCP) - IntalnetAcces')
 @section('page-header', 'Conectores IA (MCP)')
-@section('page-sub-header', 'Servidor de solo lectura para ChatGPT, Freebuff y otros clientes MCP')
+@section('page-sub-header', 'Servidor de solo lectura para Claude, ChatGPT, Freebuff y otros clientes MCP')
 
 @section('content')
 <div class="space-y-6">
@@ -38,6 +38,8 @@
         </div>
     @endif
 
+    @include('mcp.partials.oauth')
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Datos de conexión -->
@@ -58,7 +60,7 @@
                     </div>
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
                         <p class="text-[10px] uppercase font-black text-slate-400 tracking-wider">Autenticación</p>
-                        <p class="font-mono text-xs font-bold text-slate-900 mt-1">Authorization: Bearer &lt;token&gt;</p>
+                        <p class="font-mono text-xs font-bold text-slate-900 mt-1">OAuth 2.1 o Authorization: Bearer &lt;token&gt;</p>
                     </div>
                 </div>
 
@@ -103,7 +105,7 @@
                         <span>ChatGPT</span>
                     </p>
                     <p class="text-[11px] text-slate-600 font-medium mt-1 leading-relaxed">
-                        ChatGPT solo admite OAuth o conexiones sin autenticación, no un Bearer estático. Este servidor usa tokens Sanctum, así que para ChatGPT haría falta añadir OAuth 2.1; no use la opción “sin autenticación” porque expondría los datos.
+                        Usa la conexión con inicio de sesión de arriba: pega la URL y elige «OAuth». ChatGPT se registra solo y te pedirá iniciar sesión; no uses «sin autenticación», porque expondría los datos.
                     </p>
                 </div>
             </div>

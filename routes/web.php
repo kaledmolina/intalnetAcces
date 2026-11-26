@@ -1,16 +1,17 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\NoveltyController;
-use App\Http\Controllers\ScheduleController;
-use App\Http\Controllers\BackupController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\McpTokenController;
+use App\Http\Controllers\NoveltyController;
+use App\Http\Controllers\OAuth\AuthorizationController as McpAuthorizationController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,10 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
+
+// OAuth del conector MCP: GET muestra el consentimiento y POST lo aprueba.
+Route::middleware('auth')->match(['get', 'post'], '/oauth/authorize', McpAuthorizationController::class)
+    ->name('oauth.authorize');
 
 // Rutas Protegidas por Autenticación (Usuario Logueado)
 Route::middleware('auth')->group(function () {
