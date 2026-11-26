@@ -16,6 +16,9 @@ services:
       APP_KEY: "base64:GF2NlcgKEMXPsfb5cz+KXP5ru2SS52Zh0+7lQ8QNHBA="
       DB_CONNECTION: "sqlite"
       DB_DATABASE: "/var/www/html/database/database.sqlite"
+      DB_JOURNAL_MODE: "WAL"
+      DB_BUSY_TIMEOUT: "5000"
+      DB_SYNCHRONOUS: "NORMAL"
     volumes:
       - storage_data:/var/www/html/storage
       - db_data:/var/www/html/database
@@ -31,7 +34,9 @@ services:
       dockerfile: Dockerfile
     container_name: intalnetacces_scheduler
     restart: always
-    command: ["php", "artisan", "schedule:work"]
+    # Sin el entrypoint de la app: no repite migraciones, permisos ni cachés.
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["exec php artisan schedule:work"]
     environment: *app_environment
     volumes:
       - storage_data:/var/www/html/storage
