@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: intalnetacces_app
     restart: always
-    environment:
+    environment: &app_environment
       APP_NAME: "IntalnetAcces"
       APP_ENV: "production"
       APP_DEBUG: "false"
@@ -20,6 +20,24 @@ services:
       - storage_data:/var/www/html/storage
       - db_data:/var/www/html/database
       - public_data:/var/www/html/public
+    networks:
+      - intalnet_net
+
+  # Mantiene la sincronización con los huelleros cada minuto, sin que nadie
+  # tenga que abrir el panel web.
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: intalnetacces_scheduler
+    restart: always
+    command: ["php", "artisan", "schedule:work"]
+    environment: *app_environment
+    volumes:
+      - storage_data:/var/www/html/storage
+      - db_data:/var/www/html/database
+    depends_on:
+      - app
     networks:
       - intalnet_net
 
