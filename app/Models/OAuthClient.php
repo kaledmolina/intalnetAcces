@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OAuthClient extends Model
 {
@@ -13,6 +14,16 @@ class OAuthClient extends Model
         'name',
         'redirect_uris',
     ];
+
+    public function authorizationCodes(): HasMany
+    {
+        return $this->hasMany(OAuthAuthorizationCode::class, 'oauth_client_id');
+    }
+
+    public function refreshTokens(): HasMany
+    {
+        return $this->hasMany(OAuthRefreshToken::class, 'oauth_client_id');
+    }
 
     /**
      * @return array<string, string>
