@@ -2,6 +2,9 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Prompts\InformeSemanal;
+use App\Mcp\Prompts\ResumenDelDia;
+use App\Mcp\Resources\DiccionarioDeCampos;
 use App\Mcp\Tools\AusenciasDelPeriodo;
 use App\Mcp\Tools\BuscarEmpleado;
 use App\Mcp\Tools\CatalogoSedesDepartamentos;
@@ -47,7 +50,12 @@ class AttendanceServer extends Server
         ExportarReporte::class,
     ];
 
-    protected array $resources = [];
+    protected array $resources = [
+        DiccionarioDeCampos::class,
+    ];
 
-    protected array $prompts = [];
+    protected array $prompts = [
+        InformeSemanal::class,
+        ResumenDelDia::class,
+    ];
 }

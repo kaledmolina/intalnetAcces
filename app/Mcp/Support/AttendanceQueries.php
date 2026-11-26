@@ -1156,6 +1156,35 @@ class AttendanceQueries
                 $row['empleado'], $row['documento'], $row['sede'], $row['departamento'],
                 $row['fecha'], $row['dia_semana'], $row['justificada'] ? 'Si' : 'No', $row['nota'],
             ];
+        } elseif ($tipo === 'marcaciones_incompletas') {
+            $all = $this->incompleteRows($desde, $hasta, $scope['code'], $departamento);
+            $total = count($all);
+            $rows = array_slice($all, 0, $limit);
+            $headers = ['Empleado', 'Documento', 'Sede', 'Departamento', 'Fecha', 'Dia', 'Laborable', 'Problema', 'Marcaciones', 'Primera', 'Ultima', 'Minutos transcurridos', 'Tipos'];
+            $line = fn (array $row) => [
+                $row['empleado'], $row['documento'], $row['sede'], $row['departamento'],
+                $row['fecha'], $this->dayName(Carbon::parse($row['fecha'])->dayOfWeekIso),
+                $row['dia_laborable'] ? 'Si' : 'No', $row['problema'], $row['marcaciones'],
+                $row['primera'], $row['ultima'], $row['duracion_minutos'],
+                implode('|', $row['tipos']),
+            ];
+        } elseif ($tipo === 'sin_asignar') {
+            [$rows, $total] = $this->marcacionesSinAsignar($desde, $hasta, $limit);
+            $headers = ['Fecha', 'Hora', 'Equipo', 'Numero empleado', 'Tarjeta', 'Tipo', 'Evento'];
+            $line = fn (array $row) => [
+                $row['fecha'], $row['hora'], $row['equipo'], $row['numero_empleado'],
+                $row['tarjeta'], $row['tipo'], $row['evento'],
+            ];
+        } elseif ($tipo === 'novedades') {
+            [$all, $total] = $this->novedadRows($desde, $hasta, $scope['code'], $departamento);
+            $rows = array_slice($all, 0, $limit);
+            $headers = ['Fecha', 'Dia', 'Empleado', 'Documento', 'Sede', 'Departamento', 'Novedad', 'Hora programada', 'Hora marcada', 'Minutos', 'Detalle'];
+            $line = fn (array $row) => [
+                $row['fecha'], $this->dayName(Carbon::parse($row['fecha'])->dayOfWeekIso),
+                $row['empleado'], $row['documento'], $row['sede'], $row['departamento'],
+                $row['novedad'], $row['hora_programada'], $row['hora_marcada'],
+                $row['minutos'], $row['detalle'],
+            ];
         } elseif ($tipo === 'horas_trabajadas') {
             $result = $this->horasTrabajadas($desde, $hasta, $scope['code'], $departamento, $limit);
             $rows = $result['data'] ?? [];
@@ -1241,6 +1270,144 @@ class AttendanceQueries
         $total = $rows->count();
 
         return [$rows->take($limite)->all(), $total];
+    }
+
+    /**
+     * Marcaciones que llegaron del huellero sin un empleado asociado
+     * (employee_no o card_no que no cruzan con ningún empleado del tenant).
+     *
+     * @return array{0: array<int, array<string, mixed>>, 1: int}
+     */
+    private function marcacionesSinAsignar(string $desde, string $hasta, int $limite): array
+    {
+        $query = AttendanceRecord::with('device')
+            ->whereNull('employee_id')
+            ->whereBetween('event_time', [$desde.' 00:00:00', $hasta.' 23:59:59']);
+
+        $total = (clone $query)->count();
+
+        $rows = $query->orderBy('event_time')
+            ->limit($limite)
+            ->get()
+            ->map(fn (AttendanceRecord $record) => [
+                'fecha' => $record->event_time->toDateString(),
+                'hora' => $this->iso($record->event_time),
+                'equipo' => $record->device?->name,
+                'numero_empleado' => $record->employee_no,
+                'tarjeta' => $record->card_no,
+                'tipo' => $record->attendance_type,
+                'evento' => $record->hikvision_event_id,
+            ])
+            ->all();
+
+        return [$rows, $total];
+    }
+
+    /**
+     * Consolidado de novedades del periodo: llegadas tarde, salidas tempranas
+     * y marcaciones incompletas en una sola lista.
+     *
+     * @return array{0: array<int, array<string, mixed>>, 1: int}
+     */
+    private function novedadRows(string $desde, string $hasta, ?string $sede, ?string $departamento): array
+    {
+        $rows = [];
+
+        [$lates] = $this->lateRows($desde, $hasta, $sede, $departamento, self::MAX_EXPORT_ROWS);
+
+        foreach ($lates as $late) {
+            $entrada = Carbon::parse($late['hora_entrada']);
+
+            $rows[] = [
+                'fecha' => $late['fecha'],
+                'empleado' => $late['empleado'],
+                'documento' => $late['documento'],
+                'sede' => $late['sede'],
+                'departamento' => $late['departamento'],
+                'novedad' => 'Llegada tarde',
+                'hora_programada' => $entrada->copy()->subMinutes($late['minutos_tardanza'])->format('H:i'),
+                'hora_marcada' => $entrada->format('H:i'),
+                'minutos' => $late['minutos_tardanza'],
+                'detalle' => $late['justificada'] ? 'Justificada con nota' : 'Sin justificar',
+            ];
+        }
+
+        foreach ($this->incompleteRows($desde, $hasta, $sede, $departamento) as $incomplete) {
+            $rows[] = [
+                'fecha' => $incomplete['fecha'],
+                'empleado' => $incomplete['empleado'],
+                'documento' => $incomplete['documento'],
+                'sede' => $incomplete['sede'],
+                'departamento' => $incomplete['departamento'],
+                'novedad' => match ($incomplete['problema']) {
+                    'marcacion_unica' => 'Marcación única',
+                    'sin_salida' => 'Sin salida',
+                    'sin_entrada' => 'Sin entrada',
+                    default => 'Salida no válida',
+                },
+                'hora_programada' => null,
+                'hora_marcada' => Carbon::parse($incomplete['primera'])->format('H:i'),
+                'minutos' => $incomplete['duracion_minutos'],
+                'detalle' => $incomplete['marcaciones'].' marcaciones',
+            ];
+        }
+
+        $employees = $this->employeeQuery($sede, $departamento)->get()->keyBy('id');
+        $defaultSchedule = Schedule::with('days')->where('is_default', true)->first();
+        $records = $this->recordsByEmployeeDay($employees->keys()->all(), $desde, $hasta);
+        $now = now();
+
+        foreach ($records as $key => $group) {
+            [$employeeId, $date] = explode('|', $key);
+            $employee = $employees->get((int) $employeeId);
+
+            if (! $employee || $group->count() < 2) {
+                continue;
+            }
+
+            $punches = $group->sortBy('event_time')->values();
+            $first = $punches->first()->event_time;
+            $last = $punches->last()->event_time;
+
+            if ((int) $first->diffInMinutes($last) < 25) {
+                continue;
+            }
+
+            $schedule = $this->scheduleFor($employee, $defaultSchedule);
+            $day = $schedule?->days->firstWhere('day_of_week', Carbon::parse($date)->dayOfWeekIso);
+
+            if (! $day?->is_working_day || ! $day->exit_time) {
+                continue;
+            }
+
+            $exit = Carbon::parse($date.' '.$day->exit_time);
+            $tolerance = $schedule->tolerance_minutes ?? 5;
+
+            if ($last->greaterThanOrEqualTo($exit->copy()->subMinutes($tolerance))) {
+                continue;
+            }
+
+            if ($date === $now->toDateString() && $now->lessThan($exit)) {
+                continue;
+            }
+
+            $rows[] = [
+                'fecha' => $date,
+                'empleado' => $employee->name,
+                'documento' => $employee->document_id,
+                'sede' => $this->employeeSede($employee),
+                'departamento' => $employee->department?->name,
+                'novedad' => 'Salida temprana',
+                'hora_programada' => $exit->format('H:i'),
+                'hora_marcada' => $last->format('H:i'),
+                'minutos' => (int) $last->diffInMinutes($exit),
+                'detalle' => 'Salió antes de su horario',
+            ];
+        }
+
+        usort($rows, fn (array $a, array $b) => [$a['fecha'], $a['empleado'], $a['novedad']] <=> [$b['fecha'], $b['empleado'], $b['novedad']]);
+
+        return [$rows, count($rows)];
     }
 
     /**

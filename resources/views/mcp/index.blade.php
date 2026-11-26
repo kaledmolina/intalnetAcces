@@ -70,6 +70,17 @@
                         @endforeach
                     </div>
                     <p class="text-[11px] text-slate-500 font-semibold mt-2">Máximo 200 filas por respuesta (1000 en exportar_reporte) y 60 peticiones por minuto por token.</p>
+
+                    <p class="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-2 mt-4">Prompts</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        @foreach(['informe_semanal', 'resumen_del_dia'] as $prompt)
+                            <span class="bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-mono font-bold px-2 py-1 rounded-md">{{ $prompt }}</span>
+                        @endforeach
+                    </div>
+
+                    <p class="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-2 mt-4">Recursos</p>
+                    <span class="bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-mono font-bold px-2 py-1 rounded-md">intalnet://docs/diccionario-de-campos</span>
+                    <p class="text-[11px] text-slate-500 font-semibold mt-2">exportar_reporte acepta además los tipos <span class="font-mono">marcaciones_incompletas</span>, <span class="font-mono">novedades</span> y <span class="font-mono">sin_asignar</span>.</p>
                 </div>
             </div>
 

@@ -120,6 +120,25 @@ Expone consultas de asistencia a clientes de IA mediante el paquete oficial `lar
 | `buscar_empleado` | `texto` (nombre, documento o número) | Id, nombre, documento, departamento y sede |
 | `horario_de_empleado` | `empleado` | Jornada, tolerancia e intervalos vigentes |
 
+### Exportes, prompts y recursos
+
+`exportar_reporte` devuelve un CSV (delimitador `;`, hasta 1000 filas) para el rango y los filtros indicados. Tipos disponibles:
+
+| `tipo` | Contenido |
+| --- | --- |
+| `tardanzas` | Una fila por empleado y día con llegada tarde, minutos y si está justificada. |
+| `ausencias` | Ausencias por día laborable, con nota de justificación. |
+| `horas_trabajadas` | Jornada real contra la programada por empleado. |
+| `marcaciones_incompletas` | Una fila por empleado y día con problema (`marcacion_unica`, `sin_salida`, `sin_entrada`, `salida_no_valida`). |
+| `novedades` | Llegadas tarde + salidas tempranas + marcaciones incompletas en una sola lista, con columna `novedad`. |
+| `sin_asignar` | Marcaciones del huellero sin empleado asociado (`employee_id` nulo); ignora `sede` y `departamento`. |
+
+El servidor también publica dos prompts y un recurso de referencia:
+
+- `informe_semanal` — plantilla del informe semanal (marcaciones sin salida + tardanzas, con rango y llamadas por día ya resueltos).
+- `resumen_del_dia` — plantilla del resumen diario (entradas, tardanzas, sin marcación y sin salida).
+- `intalnet://docs/diccionario-de-campos` — recurso Markdown con el significado de `check_in`, `check_out`, `sin_salida`, `truncated`, límites y convenciones de fechas.
+
 ### Arranque
 
 ```bash

@@ -576,6 +576,142 @@ class McpAttendanceToolsTest extends TestCase
         $mes->assertJsonPath('result.structuredContent.sin_salida.data.0.dias.0.fecha', '2026-11-16');
     }
 
+    public function test_exportar_reporte_incluye_marcaciones_incompletas_novedades_y_sin_asignar(): void
+    {
+        Carbon::setTestNow('2026-11-26 10:00:00');
+
+        // Viernes 2026-11-20: entrada 08:20 (tarde) y salida 15:30 (90 min antes del horario).
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => self::FECHA.' 15:30:00',
+            'attendance_type' => 'check_out',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        // Jueves 2026-11-19: una sola marcación.
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => '2026-11-19 08:00:00',
+            'attendance_type' => 'check_in',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        // Marcación que llegó del huellero sin empleado asociado.
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => null,
+            'employee_no' => '999',
+            'card_no' => 'CARD-9',
+            'event_time' => self::FECHA.' 09:05:00',
+            'attendance_type' => 'auto',
+        ]);
+
+        $incompletas = $this->callTool($this->tokenA, 'exportar_reporte', [
+            'tipo' => 'marcaciones_incompletas',
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $incompletas->assertOk();
+        $incompletas->assertJsonPath('result.structuredContent.tipo', 'marcaciones_incompletas');
+        $incompletas->assertJsonPath('result.structuredContent.filas', 1);
+
+        $csvIncompletas = $incompletas->json('result.structuredContent.csv');
+        $this->assertStringContainsString('marcacion_unica', $csvIncompletas);
+        $this->assertStringContainsString('2026-11-19', $csvIncompletas);
+
+        $novedades = $this->callTool($this->tokenA, 'exportar_reporte', [
+            'tipo' => 'novedades',
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $novedades->assertOk();
+        $novedades->assertJsonPath('result.structuredContent.filas', 3);
+
+        $csvNovedades = $novedades->json('result.structuredContent.csv');
+        $this->assertStringContainsString('Llegada tarde', $csvNovedades);
+        $this->assertStringContainsString('Salida temprana', $csvNovedades);
+        $this->assertStringContainsString('Marcación única', $csvNovedades);
+        $this->assertStringContainsString('90', $csvNovedades);
+
+        $sinAsignar = $this->callTool($this->tokenA, 'exportar_reporte', [
+            'tipo' => 'sin_asignar',
+            'desde' => '2026-11-16',
+            'hasta' => self::FECHA,
+        ]);
+        $sinAsignar->assertOk();
+        $sinAsignar->assertJsonPath('result.structuredContent.filas', 1);
+
+        $csvSinAsignar = $sinAsignar->json('result.structuredContent.csv');
+        $this->assertStringContainsString('999', $csvSinAsignar);
+        $this->assertStringContainsString('CARD-9', $csvSinAsignar);
+    }
+
+    public function test_prompts_y_recursos_del_servidor(): void
+    {
+        $prompts = $this->callMethod($this->tokenA, 'prompts/list');
+        $prompts->assertOk();
+
+        $nombres = collect($prompts->json('result.prompts'))->pluck('name')->all();
+        $this->assertContains('informe_semanal', $nombres);
+        $this->assertContains('resumen_del_dia', $nombres);
+
+        $informe = $this->callMethod($this->tokenA, 'prompts/get', [
+            'name' => 'informe_semanal',
+            'arguments' => [
+                'desde' => '2026-11-16',
+                'hasta' => '2026-11-22',
+            ],
+        ]);
+        $informe->assertOk();
+
+        $texto = $informe->json('result.messages.0.content.text');
+        $this->assertStringContainsString('2026-11-16', $texto);
+        $this->assertStringContainsString('2026-11-22', $texto);
+        $this->assertStringContainsString('marcaciones_incompletas', $texto);
+        $this->assertStringContainsString('tardanzas_por_rango', $texto);
+
+        $resumen = $this->callMethod($this->tokenA, 'prompts/get', [
+            'name' => 'resumen_del_dia',
+            'arguments' => ['fecha' => '2026-11-20'],
+        ]);
+        $resumen->assertOk();
+        $this->assertStringContainsString('2026-11-20', $resumen->json('result.messages.0.content.text'));
+
+        $recursos = $this->callMethod($this->tokenA, 'resources/list');
+        $recursos->assertOk();
+
+        $uris = collect($recursos->json('result.resources'))->pluck('uri')->all();
+        $this->assertContains('intalnet://docs/diccionario-de-campos', $uris);
+
+        $lectura = $this->callMethod($this->tokenA, 'resources/read', [
+            'uri' => 'intalnet://docs/diccionario-de-campos',
+        ]);
+        $lectura->assertOk();
+
+        $contenido = $lectura->json('result.contents.0.text');
+        $this->assertStringContainsString('check_in', $contenido);
+        $this->assertStringContainsString('sin_salida', $contenido);
+        $this->assertStringContainsString('truncated', $contenido);
+    }
+
+    private function callMethod(string $token, string $method, array $params = []): TestResponse
+    {
+        return $this->postJson('/mcp/attendance', [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => $method,
+            'params' => $params,
+        ], [
+            'Authorization' => 'Bearer '.$token,
+        ]);
+    }
+
     private function callTool(string $token, string $tool, array $arguments): TestResponse
     {
         return $this->postJson('/mcp/attendance', [
