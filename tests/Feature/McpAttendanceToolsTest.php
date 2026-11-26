@@ -178,6 +178,7 @@ class McpAttendanceToolsTest extends TestCase
         $llamadas = [
             ['tardanzas_del_dia', ['fecha' => self::FECHA]],
             ['entradas_del_dia', ['fecha' => self::FECHA]],
+            ['salidas_del_dia', ['fecha' => self::FECHA]],
             ['tardanzas_por_rango', ['desde' => self::FECHA, 'hasta' => self::FECHA]],
             ['resumen_asistencia_por_sede', ['fecha' => self::FECHA]],
             ['marcaciones_de_empleado', ['empleado' => '123456', 'desde' => self::FECHA, 'hasta' => self::FECHA]],
@@ -254,6 +255,113 @@ class McpAttendanceToolsTest extends TestCase
         $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.documento', '777777');
         $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.sede', 'SEDE-001');
         $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.departamento', 'Operaciones');
+    }
+
+    public function test_salidas_del_dia_usa_la_ultima_marcacion_y_lista_quien_no_marco_salida(): void
+    {
+        $department = Department::where('name', 'Operaciones')->firstOrFail();
+
+        $employeeB = Employee::create([
+            'user_id' => $this->userA->id,
+            'employee_no' => 'E-102',
+            'name' => 'Beto Gómez',
+            'document_id' => '654321',
+            'department_id' => $department->id,
+            'is_active' => true,
+        ]);
+
+        Employee::create([
+            'user_id' => $this->userA->id,
+            'employee_no' => 'E-103',
+            'name' => 'Carla Ruiz',
+            'document_id' => '777777',
+            'department_id' => $department->id,
+            'is_active' => true,
+        ]);
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $employeeB->id,
+            'employee_no' => 'E-102',
+            'event_time' => self::FECHA.' 07:45:00',
+            'attendance_type' => 'check_in',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => self::FECHA.' 17:10:00',
+            'attendance_type' => 'check_out',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        $response = $this->callTool($this->tokenA, 'salidas_del_dia', ['fecha' => self::FECHA]);
+
+        $response->assertOk();
+        $response->assertJsonPath('result.structuredContent.herramienta', 'salidas_del_dia');
+        $response->assertJsonPath('result.structuredContent.total', 2);
+        $response->assertJsonPath('result.structuredContent.data.0.empleado', 'Beto Gómez');
+        $response->assertJsonPath('result.structuredContent.data.0.hora_ultima_marcacion', '07:45:00');
+        $response->assertJsonPath('result.structuredContent.data.0.tipo_ultima_marcacion', 'check_in');
+        $response->assertJsonPath('result.structuredContent.data.0.marco_salida', false);
+        $response->assertJsonPath('result.structuredContent.data.0.hora_salida', null);
+        $response->assertJsonPath('result.structuredContent.data.1.empleado', 'Ana Pérez');
+        $response->assertJsonPath('result.structuredContent.data.1.hora_ultima_marcacion', '17:10:00');
+        $response->assertJsonPath('result.structuredContent.data.1.marco_salida', true);
+        $response->assertJsonPath('result.structuredContent.data.1.hora_salida', '17:10:00');
+        $response->assertJsonPath('result.structuredContent.data.1.horario_salida', '17:00:00');
+        $response->assertJsonPath('result.structuredContent.data.1.minutos_diferencia', 10);
+        $response->assertJsonPath('result.structuredContent.resumen.empleados_considerados', 3);
+        $response->assertJsonPath('result.structuredContent.resumen.sin_salida', 1);
+        $response->assertJsonPath('result.structuredContent.resumen.sin_marcacion', 1);
+        $response->assertJsonPath('result.structuredContent.resumen.ultimo.empleado', 'Ana Pérez');
+        $response->assertJsonCount(1, 'result.structuredContent.empleados_sin_salida');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_salida.0.empleado', 'Beto Gómez');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_salida.0.sede', 'SEDE-001');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_salida.0.departamento', 'Operaciones');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_salida.0.hora_ultima_marcacion', '07:45:00');
+        $response->assertJsonCount(1, 'result.structuredContent.empleados_sin_marcacion');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.empleado', 'Carla Ruiz');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_marcacion.0.departamento', 'Operaciones');
+    }
+
+    public function test_salidas_del_dia_no_da_por_salida_una_entrada_posterior_al_check_out(): void
+    {
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => self::FECHA.' 17:05:00',
+            'attendance_type' => 'check_out',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        AttendanceRecord::create([
+            'user_id' => $this->userA->id,
+            'employee_id' => $this->employeeAId,
+            'employee_no' => 'E-101',
+            'event_time' => self::FECHA.' 18:30:00',
+            'attendance_type' => 'check_in',
+            'is_late' => false,
+            'late_minutes' => 0,
+        ]);
+
+        $response = $this->callTool($this->tokenA, 'salidas_del_dia', ['fecha' => self::FECHA]);
+
+        $response->assertOk();
+        $response->assertJsonPath('result.structuredContent.total', 1);
+        $response->assertJsonPath('result.structuredContent.data.0.hora_ultima_marcacion', '18:30:00');
+        $response->assertJsonPath('result.structuredContent.data.0.tipo_ultima_marcacion', 'check_in');
+        $response->assertJsonPath('result.structuredContent.data.0.marco_salida', false);
+        $response->assertJsonPath('result.structuredContent.data.0.hora_salida', null);
+        $response->assertJsonPath('result.structuredContent.resumen.sin_salida', 1);
+        $response->assertJsonPath('result.structuredContent.empleados_sin_salida.0.empleado', 'Ana Pérez');
+        $response->assertJsonPath('result.structuredContent.empleados_sin_salida.0.hora_ultima_marcacion', '18:30:00');
     }
 
     public function test_una_sede_no_administrada_devuelve_lista_vacia_y_mensaje(): void

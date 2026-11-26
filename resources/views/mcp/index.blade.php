@@ -65,7 +65,7 @@
                 <div>
                     <p class="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-2">Herramientas disponibles</p>
                     <div class="flex flex-wrap gap-1.5">
-                        @foreach(['tardanzas_del_dia', 'entradas_del_dia', 'tardanzas_por_rango', 'resumen_asistencia_por_sede', 'marcaciones_de_empleado', 'buscar_empleado', 'horario_de_empleado', 'ranking_tardanzas', 'ausencias_del_periodo', 'marcaciones_incompletas', 'horas_trabajadas', 'detalle_de_empleado', 'catalogo_sedes_departamentos', 'incidencias_del_periodo', 'exportar_reporte'] as $tool)
+                        @foreach(['tardanzas_del_dia', 'entradas_del_dia', 'salidas_del_dia', 'tardanzas_por_rango', 'resumen_asistencia_por_sede', 'marcaciones_de_empleado', 'buscar_empleado', 'horario_de_empleado', 'ranking_tardanzas', 'ausencias_del_periodo', 'marcaciones_incompletas', 'horas_trabajadas', 'detalle_de_empleado', 'catalogo_sedes_departamentos', 'incidencias_del_periodo', 'exportar_reporte'] as $tool)
                             <span class="bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-mono font-bold px-2 py-1 rounded-md">{{ $tool }}</span>
                         @endforeach
                     </div>

@@ -175,6 +175,150 @@ class AttendanceQueries
     }
 
     /**
+     * Última marcación del día de cada empleado, de la más temprana a la más tardía.
+     *
+     * La salida solo se da por registrada si la ÚLTIMA marcación del día es
+     * check_out (misma regla que usa la app para detectar salidas faltantes).
+     * Si la última marcación es una entrada, una marca automática o una salida
+     * seguida de un nuevo check_in, el empleado se considera todavía dentro de
+     * la empresa y aparece en empleados_sin_salida.
+     *
+     * @return array<string, mixed>
+     */
+    public function salidasDelDia(
+        string $fecha,
+        ?string $sede,
+        ?string $departamento,
+        ?int $limite = null,
+    ): array {
+        $scope = $this->effectiveSede($sede);
+
+        if (! $scope['allowed']) {
+            return $this->denied();
+        }
+
+        $limite ??= self::MAX_ROWS;
+
+        $employees = $this->employeeQuery($scope['code'], $departamento)
+            ->orderBy('name')
+            ->get();
+
+        $defaultSchedule = Schedule::with('days')->where('is_default', true)->first();
+        $records = $this->recordsByEmployeeDay($employees->pluck('id')->all(), $fecha, $fecha);
+        $dayOfWeek = Carbon::parse($fecha)->dayOfWeekIso;
+        $timezone = config('app.timezone');
+
+        $exits = [];
+        $sinMarcacion = 0;
+        $sinSalida = 0;
+        $sinHorario = 0;
+        $empleadosSinSalida = [];
+        $empleadosSinMarcacion = [];
+
+        foreach ($employees as $employee) {
+            $punches = $records->get($employee->id.'|'.$fecha);
+
+            if (! $punches || $punches->isEmpty()) {
+                $sinMarcacion++;
+                $empleadosSinMarcacion[] = [
+                    'empleado' => $employee->name,
+                    'documento' => $employee->document_id,
+                    'sede' => $this->employeeSede($employee),
+                    'departamento' => $employee->department?->name,
+                ];
+
+                continue;
+            }
+
+            $sorted = $punches->sortBy('event_time')->values();
+            $ultimaMarcacion = $sorted->last();
+            $ultima = $ultimaMarcacion->event_time->copy()->setTimezone($timezone);
+
+            $marcoSalida = $ultimaMarcacion->attendance_type === 'check_out';
+            $salida = $marcoSalida ? $ultima : null;
+
+            $schedule = $this->scheduleFor($employee, $defaultSchedule);
+            $day = $schedule?->days?->first(fn ($item) => (int) $item->day_of_week === $dayOfWeek);
+            $horarioSalida = ($day && $day->is_working_day) ? $day->exit_time : null;
+
+            $diferencia = null;
+
+            if ($horarioSalida !== null) {
+                if ($salida !== null) {
+                    $programada = Carbon::parse($fecha.' '.$horarioSalida, $timezone);
+                    $diferencia = (int) $programada->diffInMinutes($salida, false);
+                }
+            } else {
+                $sinHorario++;
+            }
+
+            if (! $marcoSalida) {
+                $sinSalida++;
+                $empleadosSinSalida[] = [
+                    'empleado' => $employee->name,
+                    'documento' => $employee->document_id,
+                    'sede' => $this->employeeSede($employee),
+                    'departamento' => $employee->department?->name,
+                    'hora_ultima_marcacion' => $ultima->format('H:i:s'),
+                    'tipo_ultima_marcacion' => $ultimaMarcacion->attendance_type,
+                ];
+            }
+
+            $exits[] = [
+                'empleado_id' => $employee->id,
+                'empleado' => $employee->name,
+                'documento' => $employee->document_id,
+                'sede' => $this->employeeSede($employee),
+                'departamento' => $employee->department?->name,
+                'hora_ultima_marcacion' => $ultima->format('H:i:s'),
+                'ultima_marcacion' => $this->iso($ultima),
+                'tipo_ultima_marcacion' => $ultimaMarcacion->attendance_type,
+                'hora_salida' => $salida?->format('H:i:s'),
+                'salida' => $salida === null ? null : $this->iso($salida),
+                'horario_salida' => $horarioSalida,
+                'minutos_diferencia' => $diferencia,
+                'marco_salida' => $marcoSalida,
+                'total_marcaciones' => $sorted->count(),
+                '_timestamp' => $ultima->getTimestamp(),
+            ];
+        }
+
+        usort($exits, fn (array $a, array $b) => [$a['_timestamp'], $a['empleado']] <=> [$b['_timestamp'], $b['empleado']]);
+
+        $rows = [];
+
+        foreach ($exits as $exit) {
+            unset($exit['_timestamp']);
+
+            $rows[] = $exit;
+        }
+
+        $total = count($rows);
+        $ultimo = $total > 0 ? $rows[$total - 1] : null;
+
+        return [
+            ...$this->payload($rows, $total, 'No se encontraron marcaciones para la fecha indicada.', $limite),
+            'fecha' => $fecha,
+            'zona_horaria' => $timezone,
+            'resumen' => [
+                'empleados_considerados' => $employees->count(),
+                'con_marcacion' => $total,
+                'sin_marcacion' => $sinMarcacion,
+                'sin_salida' => $sinSalida,
+                'sin_horario' => $sinHorario,
+                'ultimo' => $ultimo === null ? null : [
+                    'empleado' => $ultimo['empleado'],
+                    'hora' => $ultimo['hora_ultima_marcacion'],
+                    'sede' => $ultimo['sede'],
+                    'departamento' => $ultimo['departamento'],
+                ],
+            ],
+            'empleados_sin_salida' => $empleadosSinSalida,
+            'empleados_sin_marcacion' => $empleadosSinMarcacion,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function tardanzasPorRango(string $desde, string $hasta, ?string $sede, ?string $departamento): array

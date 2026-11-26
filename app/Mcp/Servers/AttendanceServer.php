@@ -15,6 +15,7 @@ use App\Mcp\Tools\MarcacionesDeEmpleado;
 use App\Mcp\Tools\MarcacionesIncompletas;
 use App\Mcp\Tools\RankingTardanzas;
 use App\Mcp\Tools\ResumenAsistenciaPorSede;
+use App\Mcp\Tools\SalidasDelDia;
 use App\Mcp\Tools\TardanzasDelDia;
 use App\Mcp\Tools\TardanzasPorRango;
 use Laravel\Mcp\Server;
@@ -30,6 +31,7 @@ class AttendanceServer extends Server
     protected array $tools = [
         TardanzasDelDia::class,
         EntradasDelDia::class,
+        SalidasDelDia::class,
         TardanzasPorRango::class,
         ResumenAsistenciaPorSede::class,
         MarcacionesDeEmpleado::class,
