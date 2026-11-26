@@ -10,6 +10,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleDay;
 use App\Models\Sede;
 use App\Models\User;
+use App\Support\EarlyExitRule;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -1361,35 +1362,31 @@ class AttendanceQueries
             [$employeeId, $date] = explode('|', $key);
             $employee = $employees->get((int) $employeeId);
 
-            if (! $employee || $group->count() < 2) {
+            if (! $employee) {
                 continue;
             }
 
             $punches = $group->sortBy('event_time')->values();
-            $first = $punches->first()->event_time;
-            $last = $punches->last()->event_time;
-
-            if ((int) $first->diffInMinutes($last) < 25) {
-                continue;
-            }
+            $lastPunch = $punches->last();
 
             $schedule = $this->scheduleFor($employee, $defaultSchedule);
             $day = $schedule?->days->firstWhere('day_of_week', Carbon::parse($date)->dayOfWeekIso);
 
-            if (! $day?->is_working_day || ! $day->exit_time) {
+            $earlyExit = EarlyExitRule::detect(
+                $punches->first()->event_time,
+                $lastPunch->event_time,
+                $day,
+                $schedule?->tolerance_minutes ?? 5,
+                $now,
+                $lastPunch->attendance_type,
+            );
+
+            if (! $earlyExit) {
                 continue;
             }
 
-            $exit = Carbon::parse($date.' '.$day->exit_time);
-            $tolerance = $schedule->tolerance_minutes ?? 5;
-
-            if ($last->greaterThanOrEqualTo($exit->copy()->subMinutes($tolerance))) {
-                continue;
-            }
-
-            if ($date === $now->toDateString() && $now->lessThan($exit)) {
-                continue;
-            }
+            $exit = $earlyExit['scheduled_exit'];
+            $last = $lastPunch->event_time;
 
             $rows[] = [
                 'fecha' => $date,
@@ -1400,7 +1397,7 @@ class AttendanceQueries
                 'novedad' => 'Salida temprana',
                 'hora_programada' => $exit->format('H:i'),
                 'hora_marcada' => $last->format('H:i'),
-                'minutos' => (int) $last->diffInMinutes($exit),
+                'minutos' => $earlyExit['minutes'],
                 'detalle' => 'Salió antes de su horario',
             ];
         }

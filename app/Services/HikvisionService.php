@@ -9,7 +9,6 @@ use App\Models\EmployeeSchedule;
 use App\Models\Schedule;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
-
 use Illuminate\Support\Facades\Log;
 
 class HikvisionService
@@ -19,8 +18,8 @@ class HikvisionService
      */
     protected function getClient(Device $device): Client
     {
-        $protocol = !empty($device->protocol) ? $device->protocol : 'http';
-        $port = !empty($device->port) ? (int) $device->port : 80;
+        $protocol = ! empty($device->protocol) ? $device->protocol : 'http';
+        $port = ! empty($device->port) ? (int) $device->port : 80;
         $ip = trim($device->ip_address ?? '');
         $baseUrl = "{$protocol}://{$ip}:{$port}";
 
@@ -51,7 +50,7 @@ class HikvisionService
 
             return $isOnline;
         } catch (\Exception $e) {
-            Log::warning("Dispositivo {$device->name} ({$device->ip_address}) offline: " . $e->getMessage());
+            Log::warning("Dispositivo {$device->name} ({$device->ip_address}) offline: ".$e->getMessage());
 
             $device->update([
                 'status' => 'offline',
@@ -90,15 +89,15 @@ class HikvisionService
             $matches = $data['FingerPrintSearch']['numOfMatches'] ?? 0;
             $info = $data['FingerPrintSearch']['FingerPrintInfo'] ?? $data['FingerprintInfo'] ?? [];
 
-            if ($matches > 0 || !empty($info)) {
+            if ($matches > 0 || ! empty($info)) {
                 $isRegistered = true;
             }
         } catch (\Exception $e) {
-            Log::info("Consulta de huella en formato JSON para {$employeeNo}: " . $e->getMessage());
+            Log::info("Consulta de huella en formato JSON para {$employeeNo}: ".$e->getMessage());
         }
 
         // Método 2: Verificar eventos AcsEvent recientes de lectura dactilar
-        if (!$isRegistered) {
+        if (! $isRegistered) {
             try {
                 $client = $this->getClient($device);
                 $eventPayload = [
@@ -126,7 +125,7 @@ class HikvisionService
                     }
                 }
             } catch (\Exception $e) {
-                Log::info("Consulta de eventos AcsEvent para {$employeeNo}: " . $e->getMessage());
+                Log::info("Consulta de eventos AcsEvent para {$employeeNo}: ".$e->getMessage());
             }
         }
 
@@ -168,7 +167,8 @@ class HikvisionService
 
             return $response->getStatusCode() === 200;
         } catch (\Exception $e) {
-            Log::error("Error al registrar usuario {$employeeNo} en {$device->name}: " . $e->getMessage());
+            Log::error("Error al registrar usuario {$employeeNo} en {$device->name}: ".$e->getMessage());
+
             return false;
         }
     }
@@ -179,7 +179,7 @@ class HikvisionService
     public function captureFingerprintFromDevice(Device $device, string $employeeNo): array
     {
         // 1. Aseguramos que el usuario existe en el huellero vía ISAPI
-        $this->pushUserToDevice($device, $employeeNo, "Empleado #" . $employeeNo);
+        $this->pushUserToDevice($device, $employeeNo, 'Empleado #'.$employeeNo);
 
         try {
             $client = $this->getClient($device);
@@ -187,7 +187,7 @@ class HikvisionService
             $xmlPayload = '<?xml version="1.0" encoding="UTF-8"?>
 <FingerPrintCond version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
     <searchID>1</searchID>
-    <employeeNo>' . $employeeNo . '</employeeNo>
+    <employeeNo>'.$employeeNo.'</employeeNo>
     <fingerNo>1</fingerNo>
 </FingerPrintCond>';
 
@@ -205,7 +205,7 @@ class HikvisionService
         } catch (\Exception $e) {
             return [
                 'success' => true,
-                'message' => "✔ Usuario #" . $employeeNo . " listo en " . $device->name . ". Por favor dile a la persona que coloque su dedo 3 veces en el sensor.",
+                'message' => '✔ Usuario #'.$employeeNo.' listo en '.$device->name.'. Por favor dile a la persona que coloque su dedo 3 veces en el sensor.',
             ];
         }
     }
@@ -238,7 +238,7 @@ class HikvisionService
                 $rawBody = $response->getBody()->getContents();
                 $data = json_decode($rawBody, true);
 
-                if (!is_array($data)) {
+                if (! is_array($data)) {
                     break;
                 }
 
@@ -275,7 +275,8 @@ class HikvisionService
 
             return $allUsers;
         } catch (\Throwable $e) {
-            Log::error("Error al buscar usuarios en {$device->name} ({$device->ip_address}): " . $e->getMessage());
+            Log::error("Error al buscar usuarios en {$device->name} ({$device->ip_address}): ".$e->getMessage());
+
             return [];
         }
     }
@@ -294,29 +295,29 @@ class HikvisionService
             $users = $this->getUsersFromDevice($device);
 
             foreach ($users as $u) {
-                if (!is_array($u)) {
+                if (! is_array($u)) {
                     continue;
                 }
 
                 $employeeNo = $u['employeeNo'] ?? $u['employeeNoString'] ?? null;
 
-                if (!$employeeNo) {
+                if (! $employeeNo) {
                     continue;
                 }
 
-                $name = !empty($u['name']) ? $u['name'] : "Empleado #" . $employeeNo;
+                $name = ! empty($u['name']) ? $u['name'] : 'Empleado #'.$employeeNo;
 
                 // Buscar de forma segura sin romper por scopes
                 $employee = Employee::withoutGlobalScopes()
                     ->where(function ($q) use ($employeeNo) {
                         $q->where('employee_no', (string) $employeeNo)
-                          ->orWhere('document_id', (string) $employeeNo);
+                            ->orWhere('document_id', (string) $employeeNo);
                     })
                     ->first();
 
                 $currentUserId = auth()->id() ?? ($device->user_id ?? 1);
 
-                if (!$employee) {
+                if (! $employee) {
                     $employee = Employee::create([
                         'user_id' => $currentUserId,
                         'employee_no' => (string) $employeeNo,
@@ -337,7 +338,7 @@ class HikvisionService
                 } else {
                     $employee->update([
                         'user_id' => $currentUserId,
-                        'name' => !empty($u['name']) ? $u['name'] : $employee->name,
+                        'name' => ! empty($u['name']) ? $u['name'] : $employee->name,
                         'has_fingerprint' => true,
                     ]);
                     $updatedCount++;
@@ -348,9 +349,9 @@ class HikvisionService
         // Si estamos en la versión de PC de escritorio, enviar de inmediato los empleados nuevos a la nube
         if (config('nativephp-internal.running') || env('NATIVEPHP_RUNNING', false)) {
             try {
-                app(\App\Services\CloudSyncService::class)->push();
+                app(CloudSyncService::class)->push();
             } catch (\Throwable $t) {
-                Log::warning('Error sincronizando empleados importados a la nube: ' . $t->getMessage());
+                Log::warning('Error sincronizando empleados importados a la nube: '.$t->getMessage());
             }
         }
 
@@ -369,13 +370,17 @@ class HikvisionService
             $startDate = clone ($device->last_sync_at ?? now()->startOfDay());
             // Restar unos minutos de margen para no perder eventos en el límite
             $startDate->subMinutes(5);
-            
+
             // Límite máximo de retroactividad para no saturar el dispositivo (5 días)
             if ($startDate->lt(now()->subDays(5))) {
                 $startDate = now()->subDays(5)->startOfDay();
             }
         }
         $endDate = $endDate ?? now()->addDay()->startOfDay();
+
+        // El huellero pertenece a un tenant aunque la sincronización corra por
+        // consola (sin sesión, el hook de BelongsToTenant no puede resolverlo).
+        $tenantUserId = $device->user_id ?: auth()->id();
 
         $eventsCount = 0;
 
@@ -438,7 +443,7 @@ class HikvisionService
                         }
 
                         $eventTime = isset($event['time']) ? Carbon::parse($event['time']) : null;
-                        if (!$eventTime) {
+                        if (! $eventTime) {
                             continue;
                         }
 
@@ -446,15 +451,16 @@ class HikvisionService
                             ->orWhere('document_id', 'like', "%{$employeeNo}%")
                             ->first();
 
-                        if (!$employee) {
+                        if (! $employee) {
                             $employee = Employee::create([
+                                'user_id' => $tenantUserId,
                                 'employee_no' => $employeeNo,
-                                'name' => !empty($event['name']) ? $event['name'] : "Empleado #" . $employeeNo,
+                                'name' => ! empty($event['name']) ? $event['name'] : 'Empleado #'.$employeeNo,
                                 'is_active' => true,
                                 'has_fingerprint' => true,
                             ]);
                         } else {
-                            if (!$employee->has_fingerprint) {
+                            if (! $employee->has_fingerprint) {
                                 $employee->update(['has_fingerprint' => true]);
                             }
                         }
@@ -471,16 +477,16 @@ class HikvisionService
                                 $baseDate = $eventTime->toDateString();
 
                                 if ($dayConfig->entry_time) {
-                                    $expectedTimes['entry'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->entry_time), 'type' => 'in', 'check_tardiness' => true];
+                                    $expectedTimes['entry'] = ['time' => Carbon::parse($baseDate.' '.$dayConfig->entry_time), 'type' => 'in', 'check_tardiness' => true];
                                 }
                                 if ($dayConfig->break_start_time) {
-                                    $expectedTimes['break_start'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->break_start_time), 'type' => 'out', 'check_tardiness' => false];
+                                    $expectedTimes['break_start'] = ['time' => Carbon::parse($baseDate.' '.$dayConfig->break_start_time), 'type' => 'out', 'check_tardiness' => false];
                                 }
                                 if ($dayConfig->break_end_time) {
-                                    $expectedTimes['break_end'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->break_end_time), 'type' => 'in', 'check_tardiness' => $schedule->check_break_tardiness];
+                                    $expectedTimes['break_end'] = ['time' => Carbon::parse($baseDate.' '.$dayConfig->break_end_time), 'type' => 'in', 'check_tardiness' => $schedule->check_break_tardiness];
                                 }
                                 if ($dayConfig->exit_time) {
-                                    $expectedTimes['exit'] = ['time' => Carbon::parse($baseDate . ' ' . $dayConfig->exit_time), 'type' => 'out', 'check_tardiness' => false];
+                                    $expectedTimes['exit'] = ['time' => Carbon::parse($baseDate.' '.$dayConfig->exit_time), 'type' => 'out', 'check_tardiness' => false];
                                 }
 
                                 $closest = null;
@@ -496,7 +502,7 @@ class HikvisionService
 
                                 if ($closest && $closest['type'] === 'in' && $closest['check_tardiness']) {
                                     $toleranceDeadline = (clone $closest['time'])->addMinutes($schedule->tolerance_minutes);
-                                    
+
                                     // Si marca después de la tolerancia y dentro de 4 horas
                                     if ($eventTime->greaterThan($toleranceDeadline) && $eventTime->diffInHours($closest['time']) < 4) {
                                         $isLate = true;
@@ -506,15 +512,15 @@ class HikvisionService
 
                                 // Si es la primera marcación del día y es después de la tolerancia de entrada, siempre es tardanza
                                 // Esto cubre casos donde el empleado olvidó marcar entrada y solo marca salida a almorzar
-                                if (!$isLate && isset($expectedTimes['entry'])) {
+                                if (! $isLate && isset($expectedTimes['entry'])) {
                                     $entryToleranceDeadline = (clone $expectedTimes['entry']['time'])->addMinutes($schedule->tolerance_minutes);
                                     if ($eventTime->greaterThan($entryToleranceDeadline)) {
-                                        $hasEarlierPunch = \App\Models\AttendanceRecord::where('employee_id', $employee->id)
+                                        $hasEarlierPunch = AttendanceRecord::where('employee_id', $employee->id)
                                             ->whereDate('event_time', $eventTime->toDateString())
                                             ->where('event_time', '<', $eventTime->format('Y-m-d H:i:s'))
                                             ->exists();
-                                            
-                                        if (!$hasEarlierPunch) {
+
+                                        if (! $hasEarlierPunch) {
                                             $isLate = true;
                                             $lateMinutes = $eventTime->diffInMinutes($expectedTimes['entry']['time']);
                                         }
@@ -530,13 +536,13 @@ class HikvisionService
                         } elseif ($rawStatus === 'checkout') {
                             $attendanceType = 'check_out';
                         }
-                        
+
                         // Si el dispositivo envió 'auto', podemos inferirlo del 'closest' para tener mejor data
                         if ($attendanceType === 'auto' && isset($closest)) {
                             $attendanceType = $closest['type'] === 'in' ? 'check_in' : 'check_out';
                         }
 
-                        $eventId = $event['serialNo'] ?? ($employeeNo . '_' . $eventTime->timestamp);
+                        $eventId = $event['serialNo'] ?? ($employeeNo.'_'.$eventTime->timestamp);
 
                         $record = AttendanceRecord::updateOrCreate(
                             [
@@ -544,6 +550,7 @@ class HikvisionService
                                 'event_time' => $eventTime->format('Y-m-d H:i:s'),
                             ],
                             [
+                                'user_id' => $tenantUserId,
                                 'device_id' => $device->id,
                                 'employee_id' => $employee->id,
                                 'card_no' => $event['cardNo'] ?? null,
@@ -574,7 +581,7 @@ class HikvisionService
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Error al sincronizar marcaciones de {$device->name} ({$device->ip_address}): " . $e->getMessage());
+            Log::error("Error al sincronizar marcaciones de {$device->name} ({$device->ip_address}): ".$e->getMessage());
             $device->update(['status' => 'offline']);
         }
 
@@ -623,7 +630,8 @@ class HikvisionService
 
             return $response->getStatusCode() === 200;
         } catch (\Exception $e) {
-            Log::info("Intento ISAPI AttendanceRule en {$device->name}: " . $e->getMessage());
+            Log::info("Intento ISAPI AttendanceRule en {$device->name}: ".$e->getMessage());
+
             return false;
         }
     }

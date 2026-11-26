@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\EmployeeDailyNote;
 use App\Services\CloudSyncService;
 use App\Services\HikvisionService;
+use App\Support\EarlyExitRule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -64,8 +65,8 @@ class DashboardController extends Controller
 
         $empQuery = Employee::with('department')->where('is_active', true);
         if ($request->filled('search')) {
-            $empQuery->where('name', 'like', '%' . $request->search . '%')
-                     ->orWhere('employee_no', 'like', '%' . $request->search . '%');
+            $empQuery->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('employee_no', 'like', '%'.$request->search.'%');
         }
         $employeesPaginated = $empQuery->paginate(10)->withQueryString();
 
@@ -92,7 +93,7 @@ class DashboardController extends Controller
                     if ($currentSchedule) {
                         $dayConfig = $currentSchedule->days->where('day_of_week', $dayOfWeek)->first();
                         if ($dayConfig && $dayConfig->is_working_day && $dayConfig->entry_time) {
-                            $schEntry = \Carbon\Carbon::parse($targetDate->format('Y-m-d') . ' ' . $dayConfig->entry_time);
+                            $schEntry = Carbon::parse($targetDate->format('Y-m-d').' '.$dayConfig->entry_time);
                             $tolerance = $currentSchedule->tolerance_minutes ?? 5;
                             $entryLimit = $schEntry->copy()->addMinutes($tolerance);
                             if ($punch->event_time->gt($entryLimit)) {
@@ -105,6 +106,7 @@ class DashboardController extends Controller
             }
             $emp->today_is_late = $isLate;
             $emp->today_late_minutes = $lateMinutes;
+
             return $emp;
         });
 
@@ -175,7 +177,7 @@ class DashboardController extends Controller
 
         return response()->streamDownload(function () use ($selected, $type, $dateStr) {
             $handle = fopen('php://output', 'w');
-            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
 
             fputcsv($handle, [
                 'Fecha',
@@ -214,7 +216,7 @@ class DashboardController extends Controller
                     $exitTime = 'Sin Registro';
                     $statusText = 'Sin marcación de entrada';
                 } elseif ($type === 'present') {
-                    $statusText = !empty($emp->today_is_late)
+                    $statusText = ! empty($emp->today_is_late)
                         ? "Presente (Tardanza +{$emp->today_late_minutes} min)"
                         : 'Presente Puntual';
                 }
@@ -284,7 +286,7 @@ class DashboardController extends Controller
 
         foreach ($totalEmployeesList as $emp) {
             $punches = $todayPunches->get($emp->id);
-            if (!$punches || $punches->isEmpty()) {
+            if (! $punches || $punches->isEmpty()) {
                 continue;
             }
 
@@ -301,7 +303,7 @@ class DashboardController extends Controller
             $lateEntryMinutes = 0;
 
             if ($dayConfig && $dayConfig->is_working_day && $dayConfig->entry_time) {
-                $schEntry = Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->entry_time);
+                $schEntry = Carbon::parse($today->format('Y-m-d').' '.$dayConfig->entry_time);
                 $earlyLimit = $schEntry->copy()->subMinutes($tolerance);
                 $lateLimit = $schEntry->copy()->addMinutes($tolerance);
 
@@ -325,22 +327,31 @@ class DashboardController extends Controller
             }
 
             // 2. Evaluación de Salidas (Anticipada, Tarde o Sin Salida)
-            $hasValidExit = $punches->count() >= 2 && $firstPunchTime->diffInMinutes($lastPunch->event_time) >= 30;
+            $hasValidExit = $punches->count() >= 2
+                && abs((int) $firstPunchTime->diffInMinutes($lastPunch->event_time)) >= EarlyExitRule::MIN_WORKED_MINUTES;
 
             if ($hasValidExit) {
                 $exitPunch = $lastPunch;
 
                 if ($dayConfig && $dayConfig->is_working_day && $dayConfig->exit_time) {
-                    $schExit = Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->exit_time);
+                    $schExit = Carbon::parse($today->format('Y-m-d').' '.$dayConfig->exit_time);
                     $lateExitLimit = $schExit->copy()->addMinutes($tolerance);
 
-                    // A. Salida Anticipada (marcó salida antes de su horario de salida programado)
-                    if ($exitPunch->event_time->lt($schExit)) {
+                    // A. Salida Anticipada (misma regla que Novedades y el CSV del MCP)
+                    $earlyExit = EarlyExitRule::detect(
+                        $firstPunchTime,
+                        $exitPunch->event_time,
+                        $dayConfig,
+                        $tolerance,
+                        $now,
+                        $exitPunch->attendance_type,
+                    );
+
+                    if ($earlyExit) {
                         $earlyExitEmpIdsArray[] = $emp->id;
-                        $earlyExitMinutes = abs((int) $schExit->diffInMinutes($exitPunch->event_time));
                         $earlyExitDetails[$emp->id] = [
                             'exit_time' => $exitPunch->event_time->format('h:i A'),
-                            'minutes' => $earlyExitMinutes,
+                            'minutes' => $earlyExit['minutes'],
                         ];
                     }
                     // B. Salida Tarde (marcó salida después de su horario más la tolerancia)
@@ -356,9 +367,9 @@ class DashboardController extends Controller
             } else {
                 // Sin salida: solo considerar cuando ya terminó su turno hoy o en días anteriores
                 $shiftEnded = $isPastDate;
-                if (!$shiftEnded && $isCurrentToday) {
+                if (! $shiftEnded && $isCurrentToday) {
                     if ($dayConfig && $dayConfig->is_working_day && $dayConfig->exit_time) {
-                        $schExit = Carbon::parse($today->format('Y-m-d') . ' ' . $dayConfig->exit_time);
+                        $schExit = Carbon::parse($today->format('Y-m-d').' '.$dayConfig->exit_time);
                         if ($now->gt($schExit->copy()->addMinutes($tolerance))) {
                             $shiftEnded = true;
                         }
@@ -388,7 +399,7 @@ class DashboardController extends Controller
             ->toArray();
 
         foreach ($dbLateEmpIds as $dbLateId) {
-            if (!in_array($dbLateId, $lateEntryEmpIdsArray)) {
+            if (! in_array($dbLateId, $lateEntryEmpIdsArray)) {
                 $lateEntryEmpIdsArray[] = $dbLateId;
             }
         }
@@ -400,6 +411,7 @@ class DashboardController extends Controller
             $punch = $todayPunches->get($emp->id)?->first();
             $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
             $emp->today_note = $dailyNotes->get($emp->id)?->note;
+
             return $emp;
         });
 
@@ -409,8 +421,9 @@ class DashboardController extends Controller
             $punch = $todayPunches->get($emp->id)?->first();
             $emp->today_punch_time = $lateEntryDetails[$emp->id]['entry_time'] ?? ($punch ? $punch->event_time->format('h:i A') : '--:--');
             $emp->today_is_late = true;
-            $emp->today_late_minutes = $lateEntryDetails[$emp->id]['minutes'] ?? ($punch ? abs((int)$punch->late_minutes) : 0);
+            $emp->today_late_minutes = $lateEntryDetails[$emp->id]['minutes'] ?? ($punch ? abs((int) $punch->late_minutes) : 0);
             $emp->today_note = $dailyNotes->get($emp->id)?->note;
+
             return $emp;
         });
 
@@ -422,6 +435,7 @@ class DashboardController extends Controller
             $emp->today_exit_time = $earlyExitDetails[$emp->id]['exit_time'] ?? '--:--';
             $emp->today_early_exit_minutes = $earlyExitDetails[$emp->id]['minutes'] ?? 0;
             $emp->today_note = $dailyNotes->get($emp->id)?->note;
+
             return $emp;
         });
 
@@ -433,6 +447,7 @@ class DashboardController extends Controller
             $emp->today_exit_time = $lateExitDetails[$emp->id]['exit_time'] ?? '--:--';
             $emp->today_late_exit_minutes = $lateExitDetails[$emp->id]['minutes'] ?? 0;
             $emp->today_note = $dailyNotes->get($emp->id)?->note;
+
             return $emp;
         });
 
@@ -447,6 +462,7 @@ class DashboardController extends Controller
             $emp->today_schedule_name = $details['schedule_name'] ?? 'General';
             $emp->today_device_name = $details['device_name'] ?? 'Huellero ISAPI';
             $emp->today_note = $dailyNotes->get($emp->id)?->note;
+
             return $emp;
         });
 
@@ -455,8 +471,9 @@ class DashboardController extends Controller
             $isLate = in_array($emp->id, $lateEntryEmpIdsArray);
             $emp->today_punch_time = $punch ? $punch->event_time->format('h:i A') : '--:--';
             $emp->today_is_late = $isLate;
-            $emp->today_late_minutes = $isLate ? ($lateEntryDetails[$emp->id]['minutes'] ?? ($punch ? abs((int)$punch->late_minutes) : 0)) : 0;
+            $emp->today_late_minutes = $isLate ? ($lateEntryDetails[$emp->id]['minutes'] ?? ($punch ? abs((int) $punch->late_minutes) : 0)) : 0;
             $emp->today_note = $dailyNotes->get($emp->id)?->note;
+
             return $emp;
         });
 
@@ -465,6 +482,7 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($emp) use ($dailyNotes) {
                 $emp->today_note = $dailyNotes->get($emp->id)?->note;
+
                 return $emp;
             });
 
@@ -501,14 +519,14 @@ class DashboardController extends Controller
                 // Enviar inmediatamente las marcaciones recolectadas a la nube
                 $cloudResult = $cloudSyncService->push();
             } catch (\Throwable $e) {
-                Log::warning('Error sincronizando marcaciones con la nube tras ISAPI: ' . $e->getMessage());
+                Log::warning('Error sincronizando marcaciones con la nube tras ISAPI: '.$e->getMessage());
             }
         }
 
         $cloudText = '';
         if ($cloudResult) {
-            $cloudText = !empty($cloudResult['success']) 
-                ? ' y sincronizadas con la nube (access.intalnet.com).' 
+            $cloudText = ! empty($cloudResult['success'])
+                ? ' y sincronizadas con la nube (access.intalnet.com).'
                 : ' (Marcaciones guardadas localmente. La nube no respondió).';
         }
 
@@ -518,7 +536,7 @@ class DashboardController extends Controller
                 'new_events' => $totalNew,
                 'cloud_synced' => (bool) ($cloudResult['success'] ?? false),
                 'synced_at' => now()->format('d/m/Y, H:i:s'),
-                'message' => "Sincronización completada. {$totalNew} marcaciones nuevas{$cloudText}"
+                'message' => "Sincronización completada. {$totalNew} marcaciones nuevas{$cloudText}",
             ]);
         }
 
@@ -536,7 +554,7 @@ class DashboardController extends Controller
             return response()->json($result);
         }
 
-        if (!empty($result['success'])) {
+        if (! empty($result['success'])) {
             return redirect()->back()->with('success', $result['message']);
         }
 
