@@ -152,6 +152,8 @@
         </div>
     </div>
 
+    @include('mcp.partials.guia')
+
     <!-- Tokens activos -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-5 border-b border-slate-200">

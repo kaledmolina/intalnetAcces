@@ -133,6 +133,8 @@
         </div>
     </div>
 
+    @include('mcp.partials.guia')
+
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-5 border-b border-slate-200">
             <h3 class="font-heading font-extrabold text-sm text-slate-900">Mis tokens</h3>
